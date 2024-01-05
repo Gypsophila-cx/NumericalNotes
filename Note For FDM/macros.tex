@@ -1,0 +1,230 @@
+%引用设置使用Bibtex
+\usepackage{gbt7714}
+\bibliographystyle{gbt7714-numerical}
+%页面设置
+\usepackage{geometry}
+%字体设置
+\usepackage{fontspec}
+%\setmainfont{Times New Roman}
+%定理环境
+\usepackage{amsmath}
+%\numberwithin{equation}{section}
+\usepackage{amsthm}
+\newtheorem*{definition}{Definition}
+\newtheorem*{theorem}{Theorem}
+\newtheorem*{corollary}{Corollary}
+\newtheorem*{proposition}{Proposition}
+\newtheorem*{example}{Example}
+%数学环境字体
+\usepackage{bm}
+\usepackage[all]{xy}
+%加载 TikZ 用于绘制交换图
+\usepackage{tikz-cd}
+%颜色
+\usepackage{color,xcolor}
+
+\definecolor{miku}{RGB}{57,197,187}
+\definecolor{sakura}{RGB}{255,192,203}
+\definecolor{rose}{RGB}{255,228,225}
+\definecolor{brown}{RGB}{210,105,30}
+\definecolor{lbrown}{RGB}{239,235,224}
+\definecolor{bule}{RGB}{0,47,167}
+\definecolor{lyellow}{RGB}{250,250,210}
+\definecolor{lpurple}{RGB}{255,240,245}
+\definecolor{lbule}{RGB}{135,206,250}
+\definecolor{gbule}{RGB}{64,224,208}
+\definecolor{green}{RGB}{138,200,207}
+\definecolor{lgreen}{RGB}{225,255,255}
+\definecolor{lorange}{RGB}{248,172,140}
+\definecolor{salmon}{RGB}{250,128,114}
+\definecolor{burgundy}{rgb}{0.5, 0.0, 0.13}
+%链接设置
+\usepackage[colorlinks=true,pdfstartview=FitH,linkcolor=blue,anchorcolor=violet, citecolor=magenta]{hyperref} 
+%封面
+\usepackage{pdfpages}
+\usepackage{mathrsfs}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{lipsum}
+%彩色框
+\usepackage{framed}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\tcbuselibrary{theorems}
+\tcbuselibrary{skins}
+\usepackage{colortbl}
+\usepackage{float}
+\usepackage[export]{adjustbox}
+\newtcolorbox[auto counter,number within=section]{notebox}[2][]{%
+colback=miku!2!white,
+colframe=miku,
+coltitle=white,
+fonttitle=\bfseries,
+rightrule=2pt,
+leftrule=2pt,
+bottomrule=2pt,
+colbacktitle=miku,
+theorem style=standard,
+breakable,
+arc=2pt,
+drop fuzzy shadow=black!20!white,
+title=Note~\thetcbcounter: #2,#1}
+\newtcolorbox[auto counter,number within=section]{markbox}[2][]{%
+colback=miku!2!white,
+colframe=miku,
+coltitle=white,
+fonttitle=\bfseries,
+rightrule=0pt,
+leftrule=0pt,
+bottomrule=2pt,
+colbacktitle=miku,
+theorem style=standard,
+breakable,
+arc=0pt,
+drop fuzzy shadow=black!20!white,
+title=Remark~\thetcbcounter: #2,#1}
+\newtcolorbox[no counter]{theorems}[2][]{%
+width=12cm,
+center,
+sidebyside,
+sidebyside adapt=left,
+sidebyside gap=6mm,
+sidebyside align=center seam,
+colback=burgundy!2!white,
+colframe=burgundy,
+coltitle=white,
+fonttitle=\bfseries,
+rightrule=1pt,
+leftrule=1pt,
+bottomrule=2pt,
+colbacktitle=burgundy,
+theorem style=standard,
+enhanced,
+drop fuzzy shadow southeast=black!30!white,
+breakable,
+arc=0pt,
+title=Theorem. #2,#1}
+\newtcolorbox[no counter]{definitions}[2][]{%
+width=12cm,
+center,
+colback=lyellow!2!white,
+colframe=yellow!3!lyellow,
+coltitle=bule,
+fonttitle=\bfseries,
+rightrule=0pt,
+leftrule=1pt,
+bottomrule=2pt,
+colbacktitle=lyellow,
+theorem style=standard,
+breakable,
+arc=5pt,
+enhanced,
+drop fuzzy shadow southeast=black!20!white,
+title=Definition. #2,#1}
+\newtcolorbox[auto counter,number within=section]{corollarys}[2][]{%
+colback=lyellow!2!white,
+colframe=lyellow,
+coltitle=bule,
+fonttitle=\bfseries,
+rightrule=0pt,
+leftrule=1pt,
+bottomrule=2pt,
+colbacktitle=lyellow,
+theorem style=standard,
+breakable,
+arc=0pt,
+enhanced,
+drop fuzzy shadow southeast=black!20!white,
+title=Corollary~\thetcbcounter: #2,#1}
+\newtcolorbox[auto counter,number within=section]{lemmas}[2][]{%
+width=12cm,
+center,
+colback=lyellow!2!white,
+colframe=lorange!30!sakura,
+coltitle=bule,
+fonttitle=\bfseries,
+rightrule=0pt,
+leftrule=1pt,
+bottomrule=2pt,
+colbacktitle=lorange!30!sakura,
+theorem style=standard,
+breakable,
+arc=5pt,
+enhanced,
+drop fuzzy shadow southeast=black!20!white,
+title=Lemma. #2,#1}
+\newtcolorbox[auto counter,number within=section]{propositions}[2][]{%
+width=12cm,
+center,
+colback=salmon!5,
+colframe=salmon!90!black,
+coltitle=white,
+fonttitle=\bfseries,
+rightrule=1pt,
+leftrule=1pt,
+bottomrule=2pt,
+colbacktitle=salmon!90!black,
+theorem style=standard,
+breakable,
+arc=5pt,
+enhanced,
+drop fuzzy shadow southeast=black!20!white,
+title=Proposition. #2,#1}
+\newtcolorbox[no counter]{egbox}[2][]{%
+width=12cm,
+center,
+colback=black!5!white,
+colframe=black!20!white,
+coltitle=black,
+fonttitle=\bfseries,
+rightrule=1pt,
+leftrule=1pt,
+bottomrule=2pt,
+colbacktitle=black!20!white,
+theorem style=standard,
+breakable,
+arc=0pt,
+enhanced,
+drop fuzzy shadow southeast=black!20!white,
+title=Example. #2,#1}
+
+%\begin{figure}[H]
+%\centering
+%\includegraphics[center]{pic.png}
+%\end{figure}
+\geometry{left=3cm,right=3cm,top=2cm,bottom=2cm}
+\tcbuselibrary{most}
+
+%自定义设置
+\renewcommand{\proofname}{Proof.}
+\renewcommand{\contentsname}{ Content }
+\newcommand{\image}[2]{
+    \centering
+    \includegraphics[width={#1}\textwidth]{#2}
+}
+
+
+
+\newcommand\keywords[1]{\vskip2ex\par\noindent\normalfont{\textbf{关键词}: #1}}
+\newcommand{\ekeywords}[1]{\vskip2ex\par\noindent\normalfont{\bfseries Key Words: }#1}
+\newcommand{\miku}{\textcolor{miku}}
+\newcommand{\sakura}{\textcolor{sakura}}
+\newcommand{\brown}{\textcolor{brow}}
+\newcommand{\red}{\textcolor{red}}
+\newcommand{\blue}{\textcolor{blue}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\al}{\alpha}
+\newcommand{\sa}{$\sigma$-algebra}
+\newcommand{\Bsa}{Borel $\sigma$-algebra}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\m}{ $\mathcal{M}$ }
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\myP}{\mathcal{P}}
+\renewcommand{\bf}[1]{\textbf{#1}}
+
+\newcommand{\myRom}[1]{\uppercase\expandafter{\romannumeral#1}}
+\newcommand{\pl}{$ L^p(X) $}
+\newcommand{\twol}{$ L^2(X) $}
