@@ -48,6 +48,7 @@
 \newlabel{alg:horner_runerror}{{5}{12}{多项式}{algocf.5}{}}
 \@writefile{loa}{\contentsline {algocf}{\numberline {6}{\ignorespaces Compensated Horner's Method}}{12}{algocf.6}\protected@file@percent }
 \newlabel{alg:compensated_horner}{{6}{12}{多项式}{algocf.6}{}}
+\citation{graillat2018accurate}
 \@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces 单精度下使用Horner法和补偿Horner法计算$ p(x) = (x-2)^3 $的数值结果以及绝对误差}}{13}{figure.7}\protected@file@percent }
 \newlabel{fig:Horner}{{7}{13}{单精度下使用Horner法和补偿Horner法计算$ p(x) = (x-2)^3 $的数值结果以及绝对误差}{figure.7}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {1.3.3}有理函数}{13}{subsubsection.1.3.3}\protected@file@percent }
@@ -56,15 +57,29 @@
 \@writefile{toc}{\contentsline {section}{\numberline {2}线性系统的微扰}{14}{section.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}范数分析和分量分析}{15}{subsection.2.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}范数分析}{15}{subsubsection.2.1.1}\protected@file@percent }
+\newlabel{sec:norm_analysis}{{2.1.1}{15}{范数分析}{subsubsection.2.1.1}{}}
+\citation{rice1966theory}
+\newlabel{eq:normwise_forward_error}{{39}{16}{范数分析}{equation.2.39}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}分量分析}{16}{subsubsection.2.1.2}\protected@file@percent }
+\newlabel{sec:component_analysis}{{2.1.2}{16}{分量分析}{subsubsection.2.1.2}{}}
+\newlabel{eq:componentwise_forward_error}{{42}{16}{分量分析}{equation.2.42}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces 常用$ E,f $选取以及相应的误差}}{16}{table.1}\protected@file@percent }
 \newlabel{tab:example}{{1}{16}{常用$ E,f $选取以及相应的误差}{table.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}条件数}{16}{subsection.2.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}系统的敏感性和算法的数值稳定性}{16}{subsection.2.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}附录}{16}{section.3}\protected@file@percent }
-\newlabel{code:EulerSum}{{3}{16}{Code 1:在Euler法求解$ y' = -y, y(0)=1 $中使用补偿求和}{paragraph*.2}{}}
-\newlabel{code:Horner}{{3}{17}{Code 2: Horner's method and Compensated Horner's method}{paragraph*.3}{}}
-\newlabel{code:RationalHorner}{{3}{19}{Code 3: Rational function}{paragraph*.4}{}}
-\@writefile{loa}{\contentsline {algocf}{\numberline {7}{\ignorespaces Error-Free Computations}}{21}{algocf.7}\protected@file@percent }
-\newlabel{alg:efc}{{7}{21}{Code 3: Rational function}{algocf.7}{}}
-\gdef \@abspage@last{21}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}范数意义下的条件数}{18}{subsubsection.2.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.2}分量意义下的条件数}{19}{subsubsection.2.2.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces 常用$ E,f $选取以及相应的条件数}}{20}{table.2}\protected@file@percent }
+\newlabel{tab:cond}{{2}{20}{常用$ E,f $选取以及相应的条件数}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}算法的数值稳定性}{21}{subsection.2.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces 后向稳定性和前向稳定性}}{21}{figure.9}\protected@file@percent }
+\newlabel{fig:stability}{{9}{21}{后向稳定性和前向稳定性}{figure.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}附录}{22}{section.3}\protected@file@percent }
+\newlabel{code:EulerSum}{{3}{22}{Code 1:在Euler法求解$ y' = -y, y(0)=1 $中使用补偿求和}{paragraph*.2}{}}
+\newlabel{code:Horner}{{3}{22}{Code 2: Horner's method and Compensated Horner's method}{paragraph*.3}{}}
+\newlabel{code:RationalHorner}{{3}{24}{Code 3: Rational function}{paragraph*.4}{}}
+\bibdata{Lib}
+\bibcite{graillat2018accurate}{{1}{2018}{{Graillat}}{{}}}
+\@writefile{loa}{\contentsline {algocf}{\numberline {7}{\ignorespaces Error-Free Computations}}{26}{algocf.7}\protected@file@percent }
+\newlabel{alg:efc}{{7}{26}{Code 3: Rational function}{algocf.7}{}}
+\bibcite{rice1966theory}{{2}{1966}{{Rice}}{{}}}
+\gdef \@abspage@last{27}

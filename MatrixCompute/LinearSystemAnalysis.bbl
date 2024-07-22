@@ -1,0 +1,24 @@
+\begin{thebibliography}{2}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{#1}
+\expandafter\ifx\csname urlstyle\endcsname\relax\else
+  \urlstyle{same}\fi
+\expandafter\ifx\csname href\endcsname\relax
+  \DeclareUrlCommand\doi{\urlstyle{rm}}
+  \def\eprint#1#2{#2}
+\else
+  \def\doi#1{\href{https://doi.org/#1}{\nolinkurl{#1}}}
+  \let\eprint\href
+\fi
+
+\bibitem[Graillat(2018)]{graillat2018accurate}
+GRAILLAT S.
+\newblock An accurate algorithm for evaluating rational functions\allowbreak[J].
+\newblock Applied Mathematics and Computation, 2018, 337: 494-503.
+
+\bibitem[Rice(1966)]{rice1966theory}
+RICE J~R.
+\newblock A theory of condition\allowbreak[J].
+\newblock SIAM Journal on Numerical Analysis, 1966, 3\allowbreak (2): 287-310.
+
+\end{thebibliography}

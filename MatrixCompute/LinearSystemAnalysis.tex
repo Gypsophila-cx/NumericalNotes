@@ -633,7 +633,7 @@
 \end{figure}
 
 \subsubsection{有理函数}
-有理函数的计算通常有两种方法，分别是基于多项式计算的算法以及连分数算法。首先来考虑第一类算法，这是最符合直觉也最常用有理函数计算方式：先分别计算分母分子多项式再计算两者的商。根据上一小节的讨论，使用不同的多项式算法就会得到不同的有理函数计算算法。当使用经典的多项式计算算法时，可以证明计算有理函数
+有理函数的计算通常有两种方法，分别是基于多项式计算的算法\cite{graillat2018accurate}以及连分数算法。首先来考虑第一类算法，这是最符合直觉也最常用有理函数计算方式：先分别计算分母分子多项式再计算两者的商。根据上一小节的讨论，使用不同的多项式算法就会得到不同的有理函数计算算法。当使用经典的多项式计算算法时，可以证明计算有理函数
 \[
     f(x) = \frac{p(x)}{q(x)}
 \]
@@ -701,7 +701,7 @@
 通常而言分量分析会比范数分析更加细致，可以让我们可以对每个分量的误差进行分析，但是相比于范数分析的简洁性，分量分析的结果可能更加复杂或者难以直接使用。
 在本章中，我们使用$ E $来控制对$ A $的扰动，$ f $来控制对$ b $的扰动。
 
-\subsubsection{范数分析}
+\subsubsection{范数分析}\label{sec:norm_analysis}
 这一节我们使用范数来刻画扰动和误差。根据上一章的讨论，当使用浮点数计算$ Ax=b $得到的数值解$ \hat{x} $实际上可以视作扰动系统$ (A+\Delta A)y = b+\Delta b $的准确解，其中$ \Delta A $和$ \Delta b $是在浮点计算原系统时引入的后向误差，在本节我们使用范数研究这一后向误差。
 
 首先我们从计算得到的数值解$ y=\hat{x} $出发。为了研究数值解$ y $所满足的系统究竟有多接近原来的系统，定义
@@ -747,12 +747,12 @@
     \| y-x \| \leqslant \| A^{-1} \| (\| \Delta b \| + \| \Delta A \| \| x \| + \| \Delta A \| \| x-y \|),  
 \]
 带入$ \| \Delta A \| \leqslant \epsilon \| A \| $，$ \| \Delta b \| \leqslant \epsilon \| b \| $整理可得前向误差估计
-\begin{equation}
+\begin{equation}\label{eq:normwise_forward_error}
     \frac{\| x-y \|}{\| x \| } \leqslant \frac{\epsilon}{1-\epsilon \| A^{-1} \| \| E \|} \left( \frac{\| A^{-1} \| \| f \|}{\| x \|} + \| A^{-1} \| \| E \| \right).
 \end{equation}
-该估计描述了系统受到扰动时解的相对变化幅度。可以证明前向相对误差可以达到上面估计右端关于$ \epsilon $同阶的程度。
+该估计描述了系统受到扰动时解的相对变化幅度。可以证明前向相对误差可以达到上面估计右端关于$ \epsilon $同阶的程度，因此在$ \epsilon\to 0 $时上述估计是最优的。
 
-\subsubsection{分量分析}
+\subsubsection{分量分析}\label{sec:component_analysis}
 这一节我们再次考虑线性系统$ Ax=b $以及扰动系统$ (A+\Delta A)y = b + \Delta b $，但是使用绝对值代替范数来刻画扰动和误差。和之前一样，需要分别考虑后向误差和前向误差。
 
 首先仍然从计算得到的数值解$ y=\hat{x} $出发，定义
@@ -765,9 +765,9 @@
 \end{equation}
 当出现0做分母时，如果分子也为0则定义整体比值为0，否则定义为无穷。
 
-接下来考虑系统本身在受到的扰动对解的影响大小。现在扰动的控制变为$ | \Delta A | \leqslant \epsilon E $，$ | \Delta b | \leqslant \epsilon f $，并且需要$ \epsilon\| |A^{-1}|E \| < 1 $，此时可以证明前向误差估计为
-\begin{equation}
-    \frac{| x-y |}{| x |} \leqslant \frac{\epsilon}{1-\epsilon \| |A^{-1}|E \|}  \frac{\| |A^{-1}|(E|x|+f) \|}{| x |}.
+接下来考虑系统本身在受到的扰动对解的影响大小。现在扰动的控制变为$ | \Delta A | \leqslant \epsilon E $，$ | \Delta b | \leqslant \epsilon f $，并且需要$ \epsilon\| |A^{-1}|E \|_\infty < 1 $，此时可以证明前向误差估计为
+\begin{equation}\label{eq:componentwise_forward_error}
+    \frac{\| x-y \|_\infty}{\| x \|_\infty} \leqslant \frac{\epsilon}{1-\epsilon \| |A^{-1}|E \|_\infty}  \frac{\| |A^{-1}|(E|x|+f) \|_\infty}{\| x \|_\infty }.
 \end{equation}
 同样地，前向相对误差可以达到上面估计右端关于$ \epsilon $同阶的程度。
 
@@ -789,8 +789,298 @@
 \end{table}
 
 \subsection{条件数}
+这一小节介绍条件数，一般地，该量用于刻画系统的输出值关于输入值的敏感性。条件数高的问题被称为病态问题，条件数低的问题被称为良态问题。通常要得到病态问题在一定精度下的解要远远难于得到一个良态问题同一精度的解。正则化方法可以在一定程度上减轻问题的病态性。
 
-\subsection{系统的敏感性和算法的数值稳定性}
+条件数的一般性理论最早由Rice在1966年在文献\cite{rice1966theory}中给出。如今通常使用的条件数定义如下：
+\begin{definition}
+    给定某一问题$ f: \mathbb{R}^n \to \mathbb{R}^n$，它在某$ x $处的\href{https://nhigham.com/2020/03/19/what-is-a-condition-number/}{(相对)条件数}定义为
+    \begin{equation}
+        {\rm cond}(f,x) = \lim_{\epsilon\to 0^+} \sup_{\| \Delta x \|\leqslant \epsilon \| x \| }\frac{\| f(x+\Delta x) - f(x)\| }{\epsilon \| f(x) \| }.
+    \end{equation}
+\end{definition}
+从以上定义来看，条件数是系统在受到某一量级的轻微扰动时输出值的最大相对变化幅度，正如之前所述，当扰动$ \Delta x $足够小时，我们有
+\begin{equation}
+    \frac{\| f(x+\Delta x) - f(x)\| }{\| f(x) \| }\lesssim {\rm cond}(f,x)\cdot \frac{\| \Delta x \|}{\| x \| },
+\end{equation}
+即
+\begin{equation}
+    \text{Forward relative error} \lesssim \text{Condition number} \times \text{Relative backward error}.
+\end{equation}
+其中的$ \lesssim $是指在$ \Delta x\to 0 $时不等关系成立。
+需要注意定义中的$ x $并非系统的自变量，而是系统的一部分参数，例如考虑线性系统$ Ax=b $，这里的右端项$ b $实际上是上述定义中的$ x $，而问题的解$ x $是上述定义中的函数值$ f(x) $。
+
+对于一些具体的问题，条件数可能有显式的表达式。
+\begin{enumerate}
+    \item 线性系统$ Ax = b $。当该系统有解，即$ A^{-1} $存在时，我们有$ f(b) = A^{-1}b $，于是
+    \[
+        {\rm cond}(A,b) = \lim_{\epsilon\to 0^+} \sup_{\| \Delta b \|\leqslant \epsilon \| b \| }\frac{\| A^{-1}\Delta b\| }{\epsilon \| A^{-1}b \| }
+    \]
+    其中
+    \[
+        \begin{aligned}
+            \sup_{\| \Delta b \|\leqslant \epsilon \| b \| }\frac{\| A^{-1}\Delta b\| }{\epsilon \| A^{-1}b \| } \leqslant \frac{\| A^{-1} \Delta b^*\| }{\| A^{-1} b \| } \frac{\| b \|}{\| \Delta b^* \| } &= \frac{\| A^{-1} \Delta b^* \|}{\| \Delta b^* \| }\cdot \frac{\| Ax \|}{\| x \| }\\
+            &\leqslant \| A^{-1} \| \| A \|,
+        \end{aligned}
+    \]
+    因此线性系统的条件数具有一个与右端项$ b $无关而只与系数矩阵$ A $有关的上界(不是最优的)，通常记$ \kappa(A) = \| A^{-1} \| \| A \| $，称为可逆矩阵$ A $的条件数。
+    \item 计算标量函数$ f $。当$ f $在$ x $处可导时，我们有
+    \[
+        {\rm cond}(f,x) = \lim_{\epsilon\to 0^+} \sup_{|\Delta x|\leqslant \epsilon |x| }\frac{|f(x+\Delta x) - f(x)|}{\epsilon |f(x)|} = |x| \frac{|f'(x)|}{|f(x)|}.  
+    \]
+    \item 计算向量值函数$ f $。当$ f $在$ x $处的Jacobi矩阵$ J(x) $存在时，我们有
+    \[
+        {\rm cond}(f,x) = \lim_{\epsilon\to 0^+} \sup_{\| \Delta x \| \leqslant \epsilon \| x \| }\frac{\| f(x+\Delta x) - f(x) \|}{\epsilon \| f(x) \|} = \| x \| \frac{\| J(x) \|}{\| f(x)\| }.
+    \]
+\end{enumerate}
+特别地，当在计算多项式$ p(x) = a_0 + a_1 x +\cdots+ a_n x^n $时，将系数向量$ a $视作输入，在无穷范数下我们有
+\[
+    {\rm cond}(p,a) = \frac{\max_i |a_i| \sum_{j=0}^n |x|^i}{x p'(x)}.
+\]
+
+另外，矩阵的条件数不仅取决于矩阵本身，同样也取决于所使用的范数：
+\begin{enumerate}
+    \item 使用$ L^2 $诱导范数时（$ \| A \|_2 = \sqrt{\rho(A^*A)} = \sigma_{\max}(A) $，即谱范数），矩阵$ A $的条件数为
+    \[
+        \kappa(A) = \frac{\sigma_{\max}(A)}{\sigma_{\min}(A)},
+    \]
+    其中$ \sigma_{\max},\sigma_{\min} $分别是矩阵$ A $的绝对值最大和最小的奇异值。
+    \item $ A $是正规矩阵时，$ A $的条件数为
+    \[
+        \kappa(A) = \frac{\lambda_{\max}(A)}{\lambda_{\min}(A)},
+    \]
+    其中$ \lambda_{\max},\lambda_{\min} $分别是绝对值最大和最小的特征值。
+    \item $ A $是酉矩阵时，$ A $的条件数为$ \kappa(A)=1 $。
+\end{enumerate}
+我们要求在条件数的定义中使用的范数必须是一致的，即满足$ \| AB \| \leqslant \| A \| \cdot \| B \| $，在这种情况下注意到$ I = A^{-1}A $，并且$ \| I \| = 1 $，因此一般地
+\begin{equation}
+    \kappa(A) = \| A \| \cdot \| A^{-1} \|\geqslant 1.
+\end{equation}
+特别地，当使用Frobenius范数时（$ \| A \|_F = \sqrt{\sum_{i,j}|a_{ij}|^2} = \sqrt{{\rm tr} (A^*A)} $， 或Euclidean范数），我们有更大的下界$ \kappa_F(A)\geqslant \sqrt{n} $（$ n $是矩阵的行数或列数）。
+
+自然地，当在原空间和像空间可以使用不同的范数时，我们使用由此诱导出的矩阵范数，于是条件数的定义可以推广到
+\begin{equation}
+    {\rm cond}(f,x) = \lim_{\epsilon\to 0^+} \sup_{\| \Delta x \|_1\leqslant \epsilon \| x \|_1 }\frac{\| f(x+\Delta x) - f(x)\|_2 }{\epsilon \| f(x) \|_2}.
+\end{equation}
+相应地，对于矩阵而言，如果$ A: (\mathbb{C}^n, \| \cdot \|_\alpha )\to (\mathbb{C}^n, \| \cdot \|_\beta ) $，记诱导得到的矩阵范数为$ \| A \|_{\alpha \beta} = \sup_{\| x \|_\alpha = 1 } \| Ax \|_\beta $，则
+\begin{equation}
+    \kappa_{\alpha \beta}(A) = \lim_{\epsilon\to 0^+} \sup_{\| \Delta A \|_{\alpha \beta}\leqslant \epsilon \| A \|_{\alpha \beta} }\frac{\| (A+A\Delta A)^{-1} - A^{-1} \|_{\beta \alpha} }{\epsilon \| A^{-1} \|_{\beta \alpha} }.
+\end{equation}
+在这种情况下我们仍然可以证明矩阵条件数具有与之前相同的形式(ASNA Th 6.4)
+\begin{equation}
+    \kappa_{\alpha \beta}(A) = \| A \|_{\alpha \beta} \| A^{-1} \|_{\beta \alpha}.
+\end{equation}
+
+除了之前提到的，条件数刻画了系统输出关于输入的敏感性，当问题是线性的时候，条件数也可以用来描述该系统距离奇异性的远近(ASNA Th 6.5, Gastinel, Kahan)
+\begin{equation}
+    {\rm dist}_{\alpha \beta}(A) = (\| A \|_{\alpha \beta} \| A^{-1} \|_{\beta \alpha})^{-1} = \kappa_{\alpha \beta}(A)^{-1},
+\end{equation}
+其中$ {\rm dist}_{\alpha \beta}(A) $是矩阵$ A $距离离它最近的奇异矩阵的相对距离，即
+\begin{equation}
+    {\rm dist}_{\alpha \beta}(A) = \min_{\Delta A} \left\{ \frac{\| \Delta A \|_{\alpha \beta}}{\| A \|_{\alpha \beta} }:A+\Delta A \text{ is singular.} \right\}  
+\end{equation}
+
+下面我们来进一步专门讨论线性系统$ Ax=b $的敏感性。在以上的分析中，根据条件数的定义，我们都只对右端项$ b $进行了扰动而假定系数矩阵$ A $是准确的，根据之前的讨论，使用浮点计算线性方程组时，舍入误差造成的影响相当于对$ A $进行了扰动，因此我们需要分析$ A $和$ b $同时受到扰动时的情况，为此让我们回到上一节的两种分析模式，由此可以给出相应的两个刻画这一敏感性的指标。
+\subsubsection{范数意义下的条件数}
+继续\ref{sec:norm_analysis}节的讨论，现以如下方式定义范数意义下的条件数。
+\begin{definition}\bf{\textup{normwise condition number}}
+    \begin{equation}
+        \begin{aligned}
+            \kappa_{E,f}(A,x) = \lim_{\epsilon\to 0^+} \sup_{\Delta A, \Delta b} \Big\lbrace \frac{\| \Delta x \|}{\epsilon \| x \|}: 
+            &(A+\Delta A)(x+\Delta x) = b + \Delta b, \\
+            &\| \Delta A \|\leqslant \epsilon\| E \|, \| \Delta b \| \leqslant \epsilon\| f \|  \Big\rbrace.
+        \end{aligned}
+    \end{equation}
+\end{definition}
+\noindent 在\ref{sec:norm_analysis}节中我们得到了前向误差估计(\ref{eq:normwise_forward_error}):
+\begin{equation}
+    \frac{\| \Delta x \|}{\| x \| } \leqslant \frac{\epsilon}{1-\epsilon \| A^{-1} \| \| E \|} \left( \frac{\| A^{-1} \| \| f \|}{\| x \|} + \| A^{-1} \| \| E \| \right),
+\end{equation}
+由于该估计在$ \epsilon\to 0 $时是最优的，因此
+\begin{equation}
+    \kappa_{E,f}(A,x) = \frac{\| A^{-1} \| \| f \|}{\| x \|} + \| A^{-1} \| \| E \| .
+\end{equation}
+特别地，当$ E=A,f=b $时，我们有
+\[
+    \kappa_{A,b}(A,x) = \frac{\| A^{-1} \| \| b \|}{\| x \|} + \| A^{-1} \| \| A \| = \| A^{-1} \| \| A \| \cdot \left( 1 + \frac{\| b \|}{\| A \| \| x \|} \right) = \kappa(A) \cdot \left( 1 + \frac{\| b \|}{\| A \| \| x \|} \right),
+\]
+所以$ \kappa(A)\leqslant \kappa_{A,b}(A,x)\leqslant 2\kappa(A) $，进而此时的前向误差估计可以被放宽为
+\[
+    \begin{aligned}
+        \frac{\| \Delta x \|}{\| x \| } 
+        \leqslant \frac{\epsilon}{1-\epsilon \| A^{-1} \| \| A \|} \left( \frac{\| A^{-1} \| \| b \|}{\| x \|} + \| A^{-1} \| \| A \| \right) 
+        &= \frac{\epsilon \kappa_{A,b}(A,x)}{1-\epsilon \kappa(A)}\\
+        &\leqslant \frac{2\epsilon \kappa(A)}{1-\epsilon \kappa(A)}.
+    \end{aligned}
+\]
+
+尽管上述前向误差估计看上去既简单又容易操作，然而实际上该估计往往是非常宽松的，这一问题的主要原因是尽管$ \| \Delta A \|\leqslant \epsilon\| E \| $和$ \| \Delta b \| \leqslant \epsilon\| f \| $要求了扰动在范数意义下的相对大小足够小，但是对于$ A $和$ b $中那些较小的分量而言，扰动可能是相当大的。为了获得更细致的结果，我们需要使用分量分析。
+
+\subsubsection{分量意义下的条件数}
+这一节我们不再使用范数，而是使用绝对值，条件数的定义变为：
+\begin{definition}\bf{\textup{componentwise condition number}}
+    \begin{equation}
+        \begin{aligned}
+            {\rm cond}_{E,f}(A,x) = \lim_{\epsilon\to 0^+} \sup_{\Delta A, \Delta b} \Big\lbrace \frac{\| \Delta x \|_\infty}{\epsilon \| x \|_\infty}: 
+            &(A+\Delta A)(x+\Delta x) = b + \Delta b, \\
+            &| \Delta A |\leqslant \epsilon E , | \Delta b | \leqslant \epsilon f\Big\rbrace.
+        \end{aligned}
+    \end{equation}
+\end{definition}
+\noindent 在\ref{sec:component_analysis}节中我们得到了前向误差估计(\ref{eq:componentwise_forward_error}):
+\begin{equation}
+    \frac{\| \Delta x \|_\infty}{\| x \|_\infty} \leqslant \frac{\epsilon}{1-\epsilon \| |A^{-1}|E \|_\infty}  \frac{\| |A^{-1}|(E|x|+f) \|_\infty}{\| x \|_\infty },
+\end{equation}
+由于该估计在$ \epsilon\to 0 $时是最优的，因此
+\begin{equation}
+    {\rm cond}_{E,f}(A,x) = \frac{\| |A^{-1}|(E|x|+f) \|_\infty}{\| x \|_\infty }.
+\end{equation}
+另外，也可以定义矩阵$ A $的分量意义下的条件数为
+\[
+    {\rm cond}_{E,f}(A) = \sup_x {\rm cond}_{E,f}(A,x).
+\]
+
+特别地，当$ E=|A|,f=|b| $时，按照之前的定义
+\[
+    \begin{aligned}
+        {\rm cond}_{|A|,|b|}(A,x) &= \frac{\| |A^{-1}|\cdot |A|\cdot|x| + |A^{-1}|\cdot |b| \|_\infty }{\| x \|_\infty },
+    \end{aligned}
+\]
+因为上面的定义不仅与$ A,x $有关，还包含有$ b $，而实际上$ b $可以由$ A,x $确定，所以为了避免重复，在这种情况下我们往往使用另一种稍稍不同的定义，这种条件数被称作Skeel条件数[Skeel,1979]：
+\begin{equation}
+    {\rm cond}(A,x) = \frac{\| |A^{-1}| |A| |x| \|_\infty }{\| x \|_\infty },
+\end{equation}
+不难看出$ {\rm cond}_{|A|,|b|}(A,x) \leqslant {\rm cond}(A,x) \leqslant 2{\rm cond}_{|A|,|b|}(A,x) $。
+相应的矩阵条件数为$ {\rm cond}(A) = {\rm cond}(A,e) = \| |A^{-1}||A| \|_\infty$，其中$ e = (1,1,\cdots ,1)^T $。
+
+现在我们来建立两种条件数：$ {\rm cond} $和$ \kappa_\infty $之间的关系。首先，根据无穷范数的一致性
+\[
+    {\rm cond}(A) = \| |A^{-1}||A| \|_\infty\leqslant \| A^{-1} \|_\infty \| A \|_\infty  = \kappa_\infty(A),
+\]
+另一方面，注意到$ {\rm cond} $的一个重要性质是它在行放缩下是不变的，即对任意的对角阵$ D $，$ {\rm cond}(DA) = {\rm cond}(A) $，于是
+\[
+    \begin{aligned}
+        {\rm cond}(A) = {\rm cond}(DA) = {\rm cond}(DA, e)
+    \end{aligned}
+\]
+选取$ D = D_R $使得$ D_R|A|e = e $，注意到$ \| A \|_\infty = \| |A|e \|_\infty $，我们有
+\[
+    \begin{aligned}
+        {\rm cond}(D_RA, e) = \| |A^{-1}D_R^{-1}| |D_RA|e \|_\infty 
+        &= \| |A^{-1}D_R^{-1}|e \|_\infty \\
+        &= \| A^{-1} D_R^{-1} \|_\infty \cdot 1\\
+        &= \| A^{-1} D_R^{-1} \|_\infty \| D_RA \|_\infty = \kappa_\infty(D_RA) .
+    \end{aligned}  
+\]
+其中第一行中的范数是向量范数，而后几行中的范数是矩阵范数，因此
+\begin{equation}
+    {\rm cond}(A) = \inf_D \kappa_\infty(DA), 
+\end{equation}
+并且当$ D = D_R $时有$ {\rm cond}(A) = \kappa_\infty(D_RA) $。进一步有[Chandrasekaran\&Ipsen,1995]
+\[
+    \frac{\kappa_\infty(A)}{\kappa_\infty(D_R)} \leqslant {\rm cond}(A)\leqslant \kappa_\infty(A)
+\]
+以及
+\[
+    \frac{\kappa_1(A)}{n\kappa_\infty(D_C)} \min_j \frac{\| A^{-1}e_j \|_\infty}{\| A^{-1} \|_1}\leqslant {\rm cond}(A,x) \leqslant \kappa_\infty(A).
+\]
+其中$ D_C $是满足$ e^T|A|D_C = e^T $的对角矩阵。从如上两个不等关系中可以看到，$ {\rm cond}(A) $只在矩阵$ A $各行的大小相差很大时才会远小于$ \kappa_\infty(A) $，类似地，$ {\rm cond}(A,x) $只在$ A $或者$ A^{-1} $的各列的大小相差很大时才会远小于$ \kappa_\infty(A) $。 
+
+现在我们来总结一下这一节的各种条件数各自的作用：$ \kappa_\infty(A) $是范数意义下的矩阵条件数，它是系统条件数的一个上界，当它较大时，说明以$ A $作为系数矩阵的系统在最坏情形下可能会很敏感；$ {\rm cond}(A) $是分量意义下的矩阵条件数，当它较大时，说明线性系统$ Ax=b $在$ b $取\emph{某些}值时是比较敏感的； $ {\rm cond}(A,x) $是分量意义下的系统条件数，它刻画了某一\emph{确定}的系统$ Ax=b $在受到扰动时解的相对变化幅度(给定$ x $等价于给定右端项$ b $)，当它较大时，说明该系统在受到相对扰动时是比较敏感的。需要注意的是，$ {\rm cond}(A) $较大时，$ {\rm cond}(A,x) $不一定较大，这种情况的出现表明尽管系统在某些右端项下是病态的，但是在右端项为$ b=Ax $时，系统在受到分量扰动时是良定的。例如考虑$ Ax=b $ [Kahan,1966]，其中
+\[
+    A = 
+    \begin{pmatrix}
+        2 & -1 & 1\\
+        -1 & \epsilon & \epsilon\\
+        1 & \epsilon & \epsilon
+    \end{pmatrix},\quad 
+    x = 
+    \begin{pmatrix}
+        \epsilon\\
+        -1\\
+        1
+    \end{pmatrix},\quad
+    b = 
+    \begin{pmatrix}
+        2(1+\epsilon)\\
+        -\epsilon\\
+        \epsilon
+    \end{pmatrix},
+\]
+计算可得$ \kappa_\infty(A) = 2(1+\epsilon^{-1}) $，$ {\rm cond}(A) = 3+(2\epsilon)^{-1} $，$ {\rm cond}(A,x) = 5 / 2+\epsilon $，这说明尽管$ A $是病态的，但是对于$ Ax=b $这一具体的特定问题，解在受到扰动时是比较稳定的。
+
+通常来讲，分量分析给出的前向误差估计要比范数分析给出的更加精确，但一些情况下分量分析难以进行，需要根据具体问题选择合适的条件数进行分析。
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ccccc}
+        \toprule
+        Error & $ E $ & $ f $ & $ {\rm cond}_{E,f}(A,x) $ & $ {\rm cond}_{E,f}(A) $ \\
+        \midrule
+        relative & $ |A| $ & $ |b| $ & $ {\rm cond}(A,x) $ & $ {\rm cond}(A) $ \\
+        row-wise & $ |A|ee^T $ & $ |b| $ & $ {\rm cond}(A,x) \frac{\| x \|_1}{\| x \|_\infty} $ & $ n {\rm cond}(A) $ \\
+        columnwise & $ ee^T|A| $ & $ \| b \|_1 e $ & $ \| A^{-1} \|_\infty \frac{\| |A||x| \|_1}{\| x \|_\infty} $ & $ \kappa_\infty(A) $ \\
+        normwise & $ \| A \|_\infty ee^T $ & $ \| b \|_\infty e $ & $ \kappa_\infty(A) $ & $ \kappa_\infty(A) $ \\
+        \bottomrule
+    \end{tabular}
+    \caption{常用$ E,f $选取以及相应的条件数}
+    \label{tab:cond}
+\end{table}
+
+最后，我们列举出一些关于条件数需要注意的事项，这些事实来自于Higham的博客\href{https://nhigham.com/2020/03/19/what-is-a-condition-number/}{What Is a Condition Number?}:
+\begin{quote}
+    \begin{itemize}
+        \item 尽管条件数在一些情况下具有显式表达式，但是计算条件数往往和计算解一样昂贵，因此很多研究都尝试找到一种相对轻量的方法来估计条件数或给出某种条件数的上界。
+        \item 虽然矩阵条件数$ \kappa(A)\geqslant 1 $，但是一般的条件数$ {\rm cond}(f,x) $不一定大于$ 1 $。
+        \item 对于包括矩阵求逆、矩阵特征值和多项式根在内的一系列问题，可以证明相应的条件数是到最近奇异问题的相对距离的倒数。
+        \item 由于条件数本身也是一个函数，所以一个自然的问题是：条件数的条件数是多少？对于包括前一点提到的那些问题在内的各种问题，条件数的条件数（近似）就是条件数。
+    \end{itemize}
+\end{quote}
+
+\subsection{算法的数值稳定性}
+图\ref{fig:stability}概括了四种数值稳定性的定义以及它们之间的关系。当换用不同的扰动上界时，可以得到不同的稳定性，例如按行意义下的后向稳定性（row-wise backward stability）是指算法满足$ \eta_{|A|ee^T,|b|}(\hat{x}) = O(u) $。
+\begin{figure}[htpb]
+    \centering
+    \begin{tikzpicture}
+        \node at (0, 1.5) {$\text{Componentwise backward stability} \implies \text{Componentwise forward stability}$};
+        \node at (-3, 0.8) {$\omega_{|A|,|b|}(\hat{x}) = O(u) $};
+        \node at (3, 0.8) {$ \frac{\|x - \hat{x}\|}{\|x\|} = O(\text{cond}(A, x) u) $};
+        \node at (0, -0.5) {$\text{Normwise backward stability} \implies \text{Normwise forward stability}$};
+        \node at (-3, -1.2) {$\eta_{A,b}(\hat{x}) = O(u) $};
+        \node at (3, -1.2) {$\frac{\|x - \hat{x}\|}{\|x\|} = O(\kappa(A) u) $};
+        \node at (-3, 0.2) {$\Downarrow$};
+        \node at (3, 0.2) {$\Downarrow$};
+      \end{tikzpicture}
+    \caption{后向稳定性和前向稳定性}
+    \label{fig:stability}
+\end{figure}
+
+显然，对于线性系统而言，后向误差可以直接使用之前给出的公式进行计算：
+\[
+    \eta_{E,f}(\hat{x}) = \frac{\| r \|}{\| E \| \| \hat{x} \| +\| f \| },\quad
+    \omega_{E,f}(\hat{x}) = \max_i \left[ \frac{|r_i|}{(E|\hat{x}|+f)_i} \right].
+\]
+这一方法的问题在于公式中的分母的计算值可能会发生下溢或出现零做除数，在系统是稀疏的情况下这尤其可能发生。LAPACK函数集（Linear Algebra PACKage，著名Fortran软件包）采用的策略是使用\verb|xyyRFS|例程，通过固定精度的迭代改进，尝试使$\omega_{|A|,|b|}\leqslant u$。如果分母的第$i$个分量小于$\text{safe\_min}/u$，则将$(n+1)\text{safe\_min}$加到分子和分母的第$i$个分量上。对于稀疏系统，有更复杂精巧的处理手段[Arioli\&Demmel\&Duff,1989]。
+
+要估计前向误差，可以利用公式(\ref{eq:componentwise_forward_error})，借助条件数和后向误差来给出估计，不过由于真实解$ x $未知，因此需要使用近似解$ \hat{x} $来代替，这样就得到了前向误差的估计：
+\begin{equation}
+    \frac{\| x - \hat{x} \|_\infty}{\| \hat{x} \|_\infty} \leqslant \text{cond}_{E,f}(A,\hat{x})\cdot \omega_{E,f}(\hat{x}),
+\end{equation}
+或者使用公式(\ref{eq:normwise_forward_error})，得到
+\begin{equation}
+    \frac{\| x - \hat{x} \|}{\| \hat{x} \|} \leqslant \kappa_{E,f}(A,\hat{x})\cdot \eta_{E,f}(\hat{x}).
+\end{equation}
+由于$ E,f $的选取会影响到估计的效果，因此希望找到最合适的选择。实际上，根据$ r = b - A\hat{x} $，我们有
+\[
+    \frac{\| x-\hat{x} \|_\infty}{\| \hat{x} \|_\infty} = \frac{\| A^{-1}r \|_\infty}{\| \hat{x} \|_\infty}\leqslant \frac{\| |A^{-1}||r| \|_\infty}{\| \hat{x} \|_\infty}.
+\]
+上式中的不等号在$ A^{-1} $与$ b $的各元素符号相同时取等，因此该估计在不考虑符号时是最优的。之所以不选取$ \| A^{-1}r \|_\infty / \| \hat{x} \|_\infty $是因为由于使用浮点计算，无法得到$ r $和$ \| A^{-1}r \|_\infty $的准确值，实际上计算得到的是$ \hat{r} = fl(b-A \hat{x}) $，对这一计算结果我们有如下误差估计：
+\[
+    \hat{r} = r + \Delta r,\quad |\Delta r|\leqslant \gamma_{n+1}(|A| |\hat{x}| + |b|).
+\]
+因此需要使用$ |A^{-1}||r| $，所以实际中使用的是误差估计应为
+\begin{equation}
+    \frac{\| x-\hat{x} \|_\infty}{\| \hat{x} \|_\infty} \leqslant \frac{\| |A^{-1}|(|\hat{r}|+\gamma_{n+1}(|A||\hat{x}|+|b|)) \|_\infty}{\| \hat{x} \|_\infty}.
+\end{equation}
 
 \section{附录}
 
@@ -1042,4 +1332,6 @@
         \Return $ [x,y] $\;
     }
 \end{algorithm}
+
+\bibliography{Lib}
 \end{document}
