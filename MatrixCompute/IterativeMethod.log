@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  22 JUL 2024 17:19
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  25 JUL 2024 23:52
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -1189,19 +1189,48 @@ LaTeX Font Info:    Font shape `TU/SimSun(0)/m/sl' in size <10> not available
 (Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 54.
  [1
 
-] [2] [3] [4]
+] [2] [3] [4] [5]
+Overfull \hbox (6.91434pt too wide) in paragraph at lines 352--354
+\TU/SimSun(0)/m/n/9 如 果 使 用 自 然 排 序，|  即 令 $\OML/cmm/m/it/9 x \OT1/cmr/m/n/9 = (\OML/cmm/m/it/9 u[]; []  ; u[]; []  ; u[]; []  ; u[]; []  ; u[]; []  ; u[]\OT1/cmr/m/n/9 )$\TU/SimSun(0)/m/n/9 ，|  则 $\OML/cmm/m/it/9 T[]X \OT1/cmr/m/n/9 + \OML/cmm/m/it/9 XT[] \OT1/cmr/m/n/9 =
+ []
+
+[6] [7] [8] [9] [10] [11] [12] [13] [14] [15] [16]
+
+Package fontspec Info: Could not resolve font "FangSong/BI" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: Could not resolve font "FangSong/B" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: Could not resolve font "FangSong/I" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: Font family 'FangSong(0)' created for font 'FangSong'
+(fontspec)             with options [Script={CJK}].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->"FangSong/OT:script=hani;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
+
+ [17] [18] [19] [20] [21] [22] [23]
 No file IterativeMethod.bbl.
-[5] [6] (./IterativeMethod.aux)
+[24] [25] (./IterativeMethod.aux)
 Package rerunfilecheck Info: File `IterativeMethod.out' has not changed.
-(rerunfilecheck)             Checksum: 578CD9EAB2D73F46FAFAF937BBB3B8BF;1455.
+(rerunfilecheck)             Checksum: 72132C810C11165CAEF497C586B98545;3101.
  ) 
 Here is how much of TeX's memory you used:
- 40879 strings out of 476683
- 893333 string characters out of 5804929
- 1882012 words of memory out of 5000000
- 60367 multiletter control sequences out of 15000+600000
- 522985 words of font info for 102 fonts, out of 8000000 for 9000
+ 41094 strings out of 476683
+ 898463 string characters out of 5804929
+ 1890012 words of memory out of 5000000
+ 60563 multiletter control sequences out of 15000+600000
+ 526275 words of font info for 123 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 119i,8n,121p,504b,519s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 119i,18n,121p,504b,739s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on IterativeMethod.pdf (6 pages).
+Output written on IterativeMethod.pdf (25 pages).

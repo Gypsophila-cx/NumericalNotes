@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  22 JUL 2024 09:43
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  25 JUL 2024 14:12
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -1173,29 +1173,59 @@ Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
 Package pdflscape Info: Auto-detected driver: dvipdfm (xetex) on input line 98.
 ))
 \c@lstlisting=\count402
-
-No file LeastSquareAndQR.bbl.
+LaTeX Font Info:    Trying to load font information for U+rsfs on input line 24.
+ (d:/Latex/texlive/2023/texmf-dist/tex/latex/jknapltx/ursfs.fd
+File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
+)
+LaTeX Font Info:    Trying to load font information for U+msa on input line 24.
+ (d:/Latex/texlive/2023/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 24.
+ (d:/Latex/texlive/2023/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
 LaTeX Font Info:    Font shape `TU/SimSun(0)/m/sl' in size <10> not available
-(Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 42.
-[1
+(Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 58.
+ [1
 
-] (./LeastSquareAndQR.aux)
+]
 
-Package rerunfilecheck Warning: File `LeastSquareAndQR.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
+Package fontspec Info: Could not resolve font "FangSong/BI" (it probably
+(fontspec)             doesn't exist).
 
-Package rerunfilecheck Info: Checksums for `LeastSquareAndQR.out':
-(rerunfilecheck)             Before: D655966FEDE92D21EB62F27346C22A5A;877
-(rerunfilecheck)             After:  4B5EBE093CA1A4A04B1C28BB5DBC33E8;975.
+
+Package fontspec Info: Could not resolve font "FangSong/B" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: Could not resolve font "FangSong/I" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: Font family 'FangSong(0)' created for font 'FangSong'
+(fontspec)             with options [Script={CJK}].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->"FangSong/OT:script=hani;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
+
+ [2] [3] [4] [5] [6]
+No file LeastSquareAndQR.bbl.
+[7] (./LeastSquareAndQR.aux)
+Package rerunfilecheck Info: File `LeastSquareAndQR.out' has not changed.
+(rerunfilecheck)             Checksum: BA167BD927341F76B4D4F597547A2072;1520.
  ) 
 Here is how much of TeX's memory you used:
- 40620 strings out of 476683
- 881865 string characters out of 5804929
- 1863012 words of memory out of 5000000
- 60154 multiletter control sequences out of 15000+600000
- 515930 words of font info for 68 fonts, out of 8000000 for 9000
+ 40856 strings out of 476683
+ 887675 string characters out of 5804929
+ 1882012 words of memory out of 5000000
+ 60327 multiletter control sequences out of 15000+600000
+ 526267 words of font info for 122 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 119i,5n,121p,505b,338s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 119i,16n,121p,505b,735s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on LeastSquareAndQR.pdf (1 page).
+Output written on LeastSquareAndQR.pdf (7 pages).
