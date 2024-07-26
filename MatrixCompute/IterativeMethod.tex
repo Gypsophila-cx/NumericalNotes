@@ -749,23 +749,130 @@ SOR的迭代矩阵为$ G^{\omega} = (D-\omega L)^{-1}[(1-\omega) D + \omega U] $
 根据约束空间与搜索空间之间的关系，投影方法可以分为两类：$ \mathcal{K} = \mathcal{L} $时称为\emph{正交(orthogonal)投影方法}，此时P-G条件也被直接称作Galerkin条件，并且可以选取同一组向量充当$ \mathcal{K} $和$ \mathcal{L} $的基，于是$ V=W $；当$ \mathcal{K} \ne \mathcal{L} $时称为\emph{倾斜(oblique)投影方法}。
 
 \subsubsection{投影矩阵}
-如果方阵$ P $满足$ P^2 = P $，则称$ P $是一个投影矩阵。由$ \lambda x =Px = P^2 x=\lambda Px = \lambda^2 x $可知$ P $的特征值为$ 0 $或$ 1 $，于是$ {\rm Rank}(P) = {\rm Tr}(P) $，并且算子范数$ \| P \|_2 = 1 $(当$ P $不是零矩阵)，一般地对于相容的矩阵范数有$ \| P \| =\| P^2 \| \leqslant \| P \|^2 $，于是$ \| P \|\geqslant 1 $。投影矩阵分为正交投影矩阵和斜投影矩阵，如果$ P^2=P $满足
+首先需要给出两个定义：
+\begin{itemize}
+    \item 如果线性变换$ \varphi $满足$ \varphi^2=\varphi $，则称$ \varphi $是\emph{幂等变换}。
+    \item 设$ V= V_1\oplus V_2\oplus \cdots \oplus V_m $是线性空间$ V $的任意直和分解，其中$ V_i $都是$ V $的子空间，于是任意$ v\in V $都有唯一分解$ v = v_1+v_2+\cdots +v_m $，其中$ v_i \in V_i $。定义
+    \begin{equation}
+        \begin{aligned}
+            \varphi_i : V &\to V_i,\\
+            v &\mapsto v_i,
+        \end{aligned}
+    \end{equation}
+    称这样的变换$ \varphi_i $是$ V $到$ V_i $上的\emph{投影变换}。
+\end{itemize}
+不难发现上面定义的投影变换满足如下性质：
+\begin{enumerate}
+    \item $ \varphi_i^2 = \varphi_i $，$ \varphi_i \varphi_j = 0 $，$ I = \varphi_1 + \cdots +\varphi_m $；
+    \item $ {\rm Ran}(\varphi_i) = V_i $，$ {\rm Ker}(\varphi_i)=\oplus_{j\ne i}V_j $，进而$ V={\rm Ran}(\varphi_i)\oplus {\rm Ker}(\varphi_i) $。
+\end{enumerate}
+因此投影变换都是幂等的。实际上可以证明幂等变换就是投影变换，两者等价，即如下定理：
+\begin{theorem}
+    设$ \varphi: V\to V $是幂等变换，则
+    \begin{equation}
+        V = {\rm Ran}(\varphi) \oplus {\rm Ker}(\varphi) = {\rm Ran}(\varphi) \oplus {\rm Ran}(I-\varphi) = {\rm Ker}(I-\varphi) \oplus {\rm Ker}(\varphi),
+    \end{equation}
+    因此$ \varphi $是$ V $到$ {\rm Ran}(\varphi) $上的投影变换。
+\end{theorem}
+\noindent \emph{Hint:}根据$ \varphi(I-\varphi) = (I-\varphi)\varphi = 0 $可知
+\[
+    {\rm Ran}(\varphi) \subset {\rm Ker}(I-\varphi),\quad {\rm Ran}(I-\varphi) \subset {\rm Ker}(\varphi),
+\]
+于是只需证明$ \dim {\rm Ran}(\varphi) = \dim {\rm Ker}(I-\varphi) $即可得到$ {\rm Ran}(\varphi) = {\rm Ker}(I-\varphi) $。首先，对于任意$ v\in V $，都有$ v = \varphi(v) + (I-\varphi)(v)\in {\rm Ran}(\varphi) + {\rm Ran}(I-\varphi) $，于是$ v\in {\rm Ker}(I-\varphi)+{\rm Ker}(\varphi) $，这说明$ V = {\rm Ker}(I-\varphi) + {\rm Ker}(\varphi) $。设$ w\in {\rm Ker}(I-\varphi)\cap {\rm Ker}(\varphi) $，则
+\[
+    w = (I-\varphi)(w) + \varphi(w) = 0,
+\]
+所以$ {\rm Ker}(I-\varphi)\cap {\rm Ker}(\varphi) = 0 $，于是
+\[
+    V = {\rm Ker}(I-\varphi)\oplus {\rm Ker}(\varphi).
+\]
+根据上式并使用维数公式，$ \dim {\rm Ran}(\varphi) = \dim V - \dim {\rm Ker}(\varphi) = \dim {\rm Ker}(I-\varphi) $，因此$ {\rm Ran}(\varphi) = {\rm Ker}(I-\varphi) $，相应的$ {\rm Ran}(I-\varphi) = {\rm Ker}(\varphi) $，因此
+\[
+    V = {\rm Ran}(\varphi) \oplus {\rm Ker}(\varphi)
+\]
+满足投影变换的定义。
+
+根据以上证明以及投影变换的性质，当$ \varphi $是投影变换时，可以选取各$ V_i $的一组基拼成$ V $的一组基，在这组基下$ \varphi $的矩阵表示为如下分块对角阵
+\[
+    \begin{bmatrix} 
+        I_r & 0 \\
+        0 & 0 
+    \end{bmatrix} ,
+\]
+其中$ r = \dim {\rm Ran}(\varphi) $。因此$ \varphi $可对角化，特征值为0或1，并且$ {\rm Tr }(\varphi) = r $。
+
+现在我们把线性变换变为矩阵。如果方阵$ P $满足$ P^2 = P $，则称$ P $是一个幂等矩阵或投影矩阵。由$ \lambda x =Px = P^2 x=\lambda Px = \lambda^2 x $可知$ P $的特征值为$ 0 $或$ 1 $，于是$ {\rm Rank}(P) = {\rm Tr}(P) $，并且算子范数$ \| P \|_2 = 1 $(当$ P $不是零矩阵)，一般地对于相容的矩阵范数有$ \| P \| =\| P^2 \| \leqslant \| P \|^2 $，于是$ \| P \|\geqslant 1 $。投影矩阵分为正交投影矩阵和斜投影矩阵，如果$ P^2=P $满足
 \[
     (Px,(I-P)x) = 0, \quad \forall x,
 \]
 则称$ P $是正交投影矩阵，否则称为斜投影矩阵。
 
-如果某一子空间$ M $有一组单位正交基$ \{u_1,u_2,\cdots ,u_m\} $，记$ U = (u_1,u_2,\cdots ,u_m) $，则从$ \mathbb{C}^n $到$ M $的正交投影算子$ P $可以表示为
+显然如果$ P $是投影矩阵，则$ I-P $也是投影矩阵，根据$ P(I-P)=0 $可以证明
+\[
+    {\rm Ker} (P) = {\rm Ran}(I-P),\quad {\rm Ker} (I-P) = {\rm Ran}(P),
+\]
+进而
+\[
+    \mathbb{R}^n = {\rm Ker}(P) \oplus {\rm Ran}(P) = {\rm Ker}(I-P) \oplus {\rm Ran}(I-P).
+\]
+事实上，投影算子由它的值域和核空间唯一确定：给定两个子空间$ M,S $($ M\oplus S = \mathbb{R}^n $)，如果投影算子$ P $满足
+\[
+    \forall x\in \mathbb{R}^n,\quad  Px \in M,\quad (I-P)x\in S,
+\]
+则$ M = {\rm Ran}(P) $，$ S = {\rm Ker}(P) $，称投影算子$ P $沿着$ S $的方向将$ x $投影到$ M $上。上述条件的一种等价形式为
+\[
+    \forall x\in \mathbb{R}^n,\quad  Px \in M,\quad (I-P)x \perp L,
+\]
+其中$ L = S^\perp = {\rm Ker}(P)^\perp $是$ S $的正交补，此时$ \dim L = n - \dim S = \dim M $，称投影算子$ P $沿着垂直于$ L $的方向将$ x $投影到$ M $上。反过来，当$ M $和$ L $的维数相同时，如果$ M $里的向量和$ L $都不正交的话，就存在满足如上条件的投影算子$ P $，即如下引理。
+
+\begin{lemma}
+    给定两个维数相同的子空间$ M,L $，则如下命题等价：
+    \begin{itemize}
+        \item $ M $内没有与$ L $正交的向量，即$ M\cap L^\perp=\{0\} $；
+        \item 存在投影算子$ P $使得
+        \[
+            \forall x\in \mathbb{R}^n,\quad  Px \in M,\quad (I-P)x \perp L.
+        \]
+    \end{itemize}
+\end{lemma}
+
+注意到$ {\rm Ran}(I-P) = {\rm Ker}(P) $，对于正交投影而言，$ Px \perp (I-P)x $的要求相当于$ {\rm Ran}(P) \perp {\rm Ker}(P) $，换言之即
+\[
+    {\rm Ker}(P) = {\rm Ran}(P)^\perp,
+\]
+这相当于取$ L = S^\perp = M $。
+如果某一子空间$ M $有一组单位正交基$ \{u_1,u_2,\cdots ,u_m\} $，记$ U = (u_1,u_2,\cdots ,u_m) $，则从$ \mathbb{R}^n $到$ M $的正交投影算子$ P $可以表示为
 \begin{equation}
-    P = UU^* = \sum_{i=1}^m (u_i, \cdot) u^i.
+    P = UU^T = \sum_{i=1}^m (u_i, \cdot) u_i.
 \end{equation}
 而如果$ \{v_1, v_2,\cdots ,v_m\} $只是$ M $的一组不一定正交的基，则$ P $可以表示为
 \begin{equation}
-    P = V(V^*V)^{-1}V^*,
+    P = V(V^TV)^{-1}V^T,
 \end{equation}
-其中$ V = (v_1,v_2,\cdots ,v_m) $，$ (V^*V)^{-1} $起到正则化的作用。由此可见正交投影矩阵$ P $和$ I-P $都是对称的。
+其中$ V = (v_1,v_2,\cdots ,v_m) $，$ (V^TV)^{-1} $起到正则化的作用。由此可见正交投影矩阵$ P $和$ I-P $都是对称的。事实上，我们有如下命题。
+\begin{proposition}
+    投影算子$ P $是正交投影算子当且仅当$ P^T = P $。
+\end{proposition}
 
-一般地，如果$ D\in \mathcal{S}_{++} $，则它可以诱导出一个内积$ (x,y)_D = (Dx,y) $，并导出一个范数$ \| x \|_D = (x,x)_D^{1 / 2} $，则子空间$ M $上的投影算子$ P_D $满足
+对于一般的投影算子，如果给定矩阵$ V $和$ U $（列数相同），它们的列向量分别张成了该投影的目标子空间$ M $和方向子空间$ L $（即投影方向，$ I-P $与$ L $正交），则$ x-Px\perp L $和$ Px\in M $的条件等价于存在$ y $使得
+\[
+    Px= Vy,\quad U^T(x-Vy) = 0,
+\]
+于是相应的斜投影矩阵为：
+\begin{equation}
+    P = V(U^TV)^{-1}U^T,
+\end{equation}
+满足
+\[
+    R(P)\subseteq M,\quad R(I-P)\perp L,
+\]
+其中的$ U^TV $在$ M $中没有与$ L $正交的向量时是可逆的。
+因此要寻找$ x^{(1)} = x^{(0)} + \delta $，其中$ \delta\in M $，满足$ b-Ax^{(1)}\perp L $，只需要找到某个如上形式的斜投影矩阵$ P $，要求存在$ y $使得
+\[
+    r^{(1)} = r^{(0)} -A \delta = A(e^{(0)}-\delta) = (I-P)y.
+\]
+
+当使用的内积不是标准内积时，投影算子的形式会发生变化。一般地，如果$ D\in \mathcal{S}_{++} $，则它可以诱导出一个内积$ (x,y)_D = (Dx,y) $，并导出一个范数$ \| x \|_D = (x,x)_D^{1 / 2} $，则子空间$ M $上的投影算子$ P_D $满足
 \begin{equation}
     x = P_D x^* \iff \min_{x\in M} \| x^* - x \|_D,
 \end{equation}
@@ -778,19 +885,6 @@ SOR的迭代矩阵为$ G^{\omega} = (D-\omega L)^{-1}[(1-\omega) D + \omega U] $
     (P_Dx, (I-P_D)x)_D = 0,\quad \forall x.
 \end{equation}
 当$ D = I $时，$ P_D $是正交投影算子，否则是斜投影算子，称为$ D $-投影算子。
-
-如果给定矩阵$ V $和$ U $，它们的列向量分别张成了投影的目标子空间$ \mathcal{K} $和方向子空间$ \mathcal{L} $（即投影方向，$ I-P $与$ \mathcal{L} $正交），则相应的斜投影矩阵为：
-\begin{equation}
-    P = V(U^TV)^{-1}U^T,
-\end{equation}
-满足
-\[
-    R(P)\subseteq \mathcal{K},\quad R(I-P)\perp \mathcal{L},
-\]
-因此要寻找$ x^{(1)} = x^{(0)} + \delta $，其中$ \delta\in \mathcal{K} $，满足$ b-Ax^{(1)}\perp \mathcal{L} $，只需要找到某个如上形式的斜投影矩阵$ P $，要求存在$ y $使得
-\[
-    r^{(1)} = r^{(0)} -A \delta = A(e^{(0)}-\delta) = (I-P)y.
-\]
 
 \subsubsection{最优化形式}
 本小节需要使用到如下引理。
@@ -1049,8 +1143,26 @@ SOR的迭代矩阵为$ G^{\omega} = (D-\omega L)^{-1}[(1-\omega) D + \omega U] $
     }
     \Return $ x $\;
 \end{algorithm}
-
+\newpage
 \subsection{Krylov方法}
+Krylov方法使用Krylov空间
+\begin{equation}
+    \mathcal{K}_m(A, v) = {\rm span}\{v, Av, A^2v, \cdots , A^{m-1}v\}
+\end{equation}
+作为搜索空间$ \mathcal{K} $，其中的$ v $往往选作残差向量$ r^{(0)} $，选取另一个与$ \mathcal{K} $相同维数的空间作为约束空间$ \mathcal{L} $，通常的选择是$ \mathcal{L} = \mathcal{K} $和$ \mathcal{L} = A \mathcal{K} $，分别对应于误差投影方法和残差投影方法。因为Krylov方法在$ \mathcal{K}_m(A,v) $(简记为$ \mathcal{K}_m $)中选取近似解，因此得到的解形如
+\[
+    x^{(m)} = x^{(0)} + p_{m-1}(A)v,
+\]
+其中$ p_{m-1} $是一个阶数不超过$ m-1 $的多项式，所以从逼近论的角度来看，Krylov方法相当于在使用形如$ p(A)b $的向量来逼近$ A^{-1}b $，其中多项式$ p $的选取依赖于约束空间$ \mathcal{L} $。
+
+关于Krylov空间，不难看出$ \dim \mathcal{K}_m $随着$ m $的增大而先增大而后保持不变，如果记使得$ p(A)v=0 $的最低阶非零多项式$ p $的阶数为$ d $，称为$ v $关于$ A $的阶数，则
+\[
+    \dim \mathcal{K}_m(A,v) = \begin{cases}
+        m, & m\leqslant d,\\
+        d, & m>d.
+    \end{cases}
+\]
+根据Hamilton-Cayley定理可得$ d\leqslant n $。
 
 \subsubsection{Arnoldi算法}
 \begin{algorithm}[htbp]
@@ -1158,6 +1270,8 @@ SOR的迭代矩阵为$ G^{\omega} = (D-\omega L)^{-1}[(1-\omega) D + \omega U] $
 \]
 其中每一个$ v_j $的确定都取决于之间的$ v_k\ (k<j) $。
 
+\newpage
+
 \subsubsection{完全正交化方法}
 
 本小节开始使用基于Arnoldi迭代的子空间方法来求解线性系统$ Ax=b $，首先我们考虑正交投影方法，即令$ \mathcal{L}=\mathcal{K}_m = \mathcal{K}_m(A,v_1) $，其中$ v_1 = r^{(0)} / \| r^{(0)} \|_2 $，$ r^{(0)} = b - Ax^{(0)} $，这等价于
@@ -1221,27 +1335,6 @@ SOR的迭代矩阵为$ G^{\omega} = (D-\omega L)^{-1}[(1-\omega) D + \omega U] $
 \]
 再令$ x = \hat{x}+\delta $作为新的解。重复这一操作可以在一些情况下得到更精确的解。对于迭代法而言类似的操作被称为重启(Restart)，使用重启可以得到FOM算法的一种变体，该算法在实际应用中可能相比原始FOM算法更加有效，具体算法如\ref{alg:RestartFOM}所示。
 
-\begin{algorithm}[htbp]
-    \caption{Restarted Full Orthogonalization Method}\label{alg:RestartFOM}
-    \KwData{$ A\in \mathbb{R}^{n\times n},b $, initial guess $ x^{(0)} $, and an integer $ m $}
-    \KwResult{An approximant solution $ x^{(m)} $.}
-    Initiation: $ i = 0,\ x^{(m)} = x^{(0)} $\;
-    \While{$ \| b - A x^{(m)} \|_2 > \epsilon $ and $ i\leqslant N $ }{
-        $ i=i+1 $\;
-        $ x^{(0)} = x^{(m)} $ \tcc*[r]{Restart}
-        $ r^{(0)} = b - Ax^{(0)} $\;
-        $ v_1 = r^{(0)} / \| r^{(0)} \|_2 $\;
-        $ x^{(m)} = x^{(0)} $\;
-        $ [V_m, H_m] = {\rm ModifiedArnoldi}(A,v_1,m) $ \tcc*[c]{algorithm \ref{alg:ModifiedArnoldi}}
-        Solve $ H_m y = \| r^{(0)} \|_2 e_1 $\;
-        $ x^{(m)} = x^{(m)} + V_m y $\;
-        $ r^{(0)} = b - Ax^{(m)} $\;
-        $ v_1 = r^{(0)} / \| r^{(0)} \|_2 $\;
-    }
-
-    \Return $ x^{(m)} $\;
-\end{algorithm}
-
 FOM算法的另一种变体是IOM(Imcomplete Orthogonalization Method)，该算法在每一步迭代时只对$ v = Av_j $进行部分正交化(减去在它之前$ k $个向量上的投影而不是减去之前全部向量上的投影)，而不是对$ v = Av_j $进行完全正交化，这样可以减少计算量。IOM的更新方式与FOM相同，即
 \[
     x^{(m)} = x^{(0)} + \| r^{(0)} \|_2 \cdot V_m H_m^{-1}e_1 ,
@@ -1251,32 +1344,10 @@ FOM算法的另一种变体是IOM(Imcomplete Orthogonalization Method)，该算�
     b - Ax^{(m)} = r^{(m)} = -h_{m+1,m}(e^T_m y) v_{m+1},
 \]
 具体算法如\ref{alg:IOM}所示。
-\begin{algorithm}[htbp]
-    \caption{Imcomplete Orthogonalization Method}\label{alg:IOM}
-    \KwData{$ A\in \mathbb{R}^{n\times n},b $, initial guess $ x^{(0)} $, and an integer $ m $}
-    \KwResult{An approximant solution $ x^{(m)} $.}
-    $ r^{(0)} = b - Ax^{(0)} $\;
-    $ v_1 = r^{(0)} / \| r^{(0)} \|_2 $\;
-    \tcc{Do Incomplete orthogonalization to $ v=Av_j $ in MGS style}
-    \For{$ j=1:m $}{
-        $ w_j = Av_j $\;
-        \For{$ i=\textcolor{red}{\max\{1,j+1-k\}}:j $}{
-            $ h_{ij} = (w_j, v_i) $\;
-            $ w_j = w_j - h_{ij}v_i $ \tcc*[c]{Partial orthogonalization about $ v_{j+1-k},\cdots ,v_{j} $}
-        }
-        $ h_{j+1,j} = \| w_j \|_2 $\;
-        \If{$ h_{j+1,j} = 0 $}{
-            Break Down\;
-        }
-        $ v_{j+1} = w_j / h_{j+1,j} $\;
-    }
-    \tcc{Incomplete orthogonalization end}
-    Solve $ H_m y = \| r^{(0)} \|_2 e_1 $\;
-    $ x^{(m)} = x^{(0)} + V_m y $\;
-    \Return $ x^{(m)} $\;
-\end{algorithm}
 
 在IOM中的第$ i $步我们只需储存这之前的$ k $个向量$ v_{j+1-k},\cdots ,v_j $以进行不完全正交化，但是在更新时则需要全部的$ V_m $，这使得只需储存$ k $个向量$ v_{j+1-k},\cdots ,v_j $的优势被消除了，为了充分利用这一优势，借助$ H_m $的带状结构可以构造出DIOM(Direct Incomplete Orthogonalization Method)算法。首先对$ H_m $进行LU分解(不选主元以保持带状结构)可以得到$ H_m = L_mU_m $，当$ H_m $的上带宽为$ k $时，上三角阵$ U_m $的上带宽也为$ k $，而由于$ H_m $是上Hessenberg的，所以下带宽为$ 1 $，进而$ L_m $的下带宽也为$ 1 $，即
+
+\begin{tiny}
 \[
     \begin{aligned}
         H_m = &
@@ -1309,7 +1380,9 @@ FOM算法的另一种变体是IOM(Imcomplete Orthogonalization Method)，该算�
     \end{bmatrix},
     \end{aligned}
 \]
-于是更新格式变为
+\end{tiny}
+
+\noindent 于是更新格式变为
 \[
     x^{(m)} = x^{(0)} + \| r^{(0)} \|_2 \cdot (V_m U_m^{-1})(L_m^{-1}e_{1}),
 \]
@@ -1358,41 +1431,6 @@ FOM算法的另一种变体是IOM(Imcomplete Orthogonalization Method)，该算�
     x^{(m)} \in x^{(0)} + \mathcal{K}_m,\quad b - Ax^{(m)}\perp \mathcal{L}_m = {\rm span}\{z_1,z_2,\cdots ,z_m\},
 \end{equation}
 其中$ z_i = v_i - (v_i,v_{m+1})v_{m+1} $。
-\newpage
-
-\begin{algorithm}[htbp]
-    \caption{Direct Imcomplete Orthogonalization Method}\label{alg:DIOM}
-    \KwData{$ A\in \mathbb{R}^{n\times n},b $, initial guess $ x^{(0)} $, and integers $ m,\ N $,$ \epsilon>0 $}
-    \KwResult{An approximant solution $ x^{(m)} $.}
-    $ m = 0 $\;
-    $ r^{(0)} = b - Ax^{(0)} $\;
-    $ v_1 = r^{(0)} / \| r^{(0)} \|_2 $\;
-    \While{$ \| r^{(m)} \|_2 >\epsilon $ and $ m<N $}{
-        $ m = m+1 $\;
-    \tcc{Do Incomplete orthogonalization to $ v=Av_j $ in MGS style}
-    \For{$ j=1:m $}{
-        $ w_j = Av_j $\;
-        \For{$ i=\textcolor{red}{\max\{1,j+1-k\}}:j $}{
-            $ h_{ij} = (w_j, v_i) $\;
-            $ w_j = w_j - h_{ij}v_i $ \tcc*[c]{Partial orthogonalization about $ v_{j+1-k},\cdots ,v_{j} $}
-        }
-        $ h_{j+1,j} = \| w_j \|_2 $\;
-        \If{$ h_{j+1,j} = 0 $}{
-            Break\;
-        }
-        $ v_{j+1} = w_j / h_{j+1,j} $\;
-    }
-    \tcc{Incomplete orthogonalization end}
-    $ [L_m, U_m] = {\rm LU}(H_m) $ \tcc*[c]{Shall exploit $ [L_{m-1}, U_{m-1}] = {\rm LU}(H_{m-1}) $}
-    \eIf{$ u_{mm} = 0 $}{
-        Stop\;
-    }{
-        \eIf{$ m=1 $}{$ \zeta_m = \| r^{(0)} \|_2 $\;}{$ \zeta_m = -l_{m,m-1}\zeta_{m-1} $\;}
-        $ p_m = (v_m - \sum_{i=\max\{1,m-k+1\}}^{m-1} u_{im} p_i) / u_{mm} $ \tcc*[r]{Calculate $ p_m $}
-        $ x^{(m)} = x^{(m-1)} + p_m \zeta_{m} $ \tcc*[r]{Directly update $ x^{(m)} $}
-    }}
-    \Return $ x^{(m)} $\;
-\end{algorithm}
 
 \subsubsection{广义最小残差方法}
 广义最小残差方法(GMRES, Generalized Minimal Residual Method)是一种残差投影方法，令$ v_1 = r^{(0)} / \| r^{(0)} \|_2 $，则它使用的搜索空间和约束空间分别为
@@ -1436,8 +1474,340 @@ FOM算法的另一种变体是IOM(Imcomplete Orthogonalization Method)，该算�
         & \ddots & \ddots & \ddots &\\
         & & \ddots & \ddots & \beta_m\\
         & & & \beta_m & \alpha_m 
-    \end{bmatrix}.
+    \end{bmatrix},
 \]
+该算法基于$ AV_m = V_{m+1}\overline{H}_m $给出的如下三项递推关系：
+\begin{equation}
+    Av_j = \beta_jv_{j-1}+\alpha_jv_j+\beta_{j+1}v_{j+1},
+\end{equation}
+开始时令$ \beta_1=0 $，当已知$ v_{j-1},v_j $和$ \beta_j $时，可以通过如下过程得到$\alpha_j,\beta_{j+1}, v_{j+1} $：
+\begin{equation}
+    \begin{aligned}
+        w_{j+1} &= Av_j - \beta_j v_{j-1},\\
+        \alpha_j&= (w_{j+1},v_j),\\
+        w_{j+1} &= w_{j+1} - \alpha_j v_j,\\
+        \beta_{j+1} &= \| w_{j+1} \|_2,\\
+        v_{j+1} &= w_{j+1} / \beta_{j+1}.
+    \end{aligned}
+\end{equation}
+在该算法中我们只需储存已得到的所有$ v_i $和两个分别用来储存$ \alpha_i $和$ \beta_i $的向量，当只需要$ T_m $而不需要$ V_m $时，在计算过程中就只需保留$ v_{j-1},v_j $和$ \alpha,\beta $即可。
+
+\subsubsection{共轭梯度法}
+共轭梯度法(CG, Conjugate Gradient Method)是用于求解正定系统的最著名的一种迭代法，它本质上是一种以$ \mathcal{K}_m(A,r^{(0)}) $为搜索空间和约束空间的正交投影方法，因此它是FOM在对称正定条件下的一种特例。
+
+与FOM类似，Galerkin条件
+\[
+    x^{(m)}\in x^{(0)}+\mathcal{K}_m,\quad b - Ax^{(m)}\perp \mathcal{K}_m
+\]
+导出的更新格式为
+\begin{equation}
+    x^{(m)} = x^{(0)} + V_m y,\quad T_my = \| r^{(0)} \|_2 e_1,
+\end{equation}
+其中$ V_m $和$ T_m $是由上一节的对称Lanczos算法得到的$ \mathcal{K}_m $的一组标准正交基和对应的对称三对角矩阵。像FOM一样，在使用对称Lanczos算法之后，可以在每次迭代后直接求解更新公式中的$ T_my = \| r^{(0)} \|_2 e_1 $以得到$ y $，进而得到$ x^{(m)} $，但是这种方法的每一次迭代都需要求解一个阶数不断增大的线性方程组，因此效率不高，所以我们希望像DIOM中一样，通过考察相邻两次迭代的关系来得到$ x^{(m-1)} $和$ x^{(m)} $间的递推关系，从而充分利用上一次迭代的结果来进行本次迭代。具体来讲，首先仍然要对$ T_m $进行LU分解，由于$ T_m $是对称三对角矩阵，因此LU分解后的$ L_m $和$ U_m $的带宽也都为$ 1 $，记为
+\[
+    T_m = 
+    \begin{bmatrix} 
+        1 &  & & &\\
+        \lambda_2 & 1 &  & &\\
+        & \lambda_3 & \ddots & &\\
+        & & \ddots & \ddots & \\
+        & & & \lambda_m & 1
+    \end{bmatrix}
+    \begin{bmatrix} 
+        \eta_1 & \mu_2 & & &\\
+        & \eta_2 & \mu_3 & &\\
+        & & \ddots & \ddots &\\
+        & & & \ddots & \mu_m\\
+        & & & & \eta_m
+    \end{bmatrix},
+\]
+于是更新格式变为
+\[
+    x^{(m)} = x^{(0)} + \| r^{(0)} \|_2 V_m U_m^{-1}L^{-1}_m e_1,
+\]
+再次令$ P_m = V_m U_m^{-1} $，$ z_m = \| r^{(0)} \|_2 L_m^{-1}e_1 $，因此
+\begin{equation}
+    x^{(m)} = x^{(0)} + P_m z_m.
+\end{equation}
+接下来我们考察$ P_m,z_m $与$ P_{m-1},z_{m-1} $之间的关系。分别对$ P_m $和$ z_m $进行分块
+\[
+    P_m = 
+    \begin{bmatrix} 
+        P_{m-1} & p_m
+    \end{bmatrix},\quad 
+    z_m = 
+    \begin{bmatrix} 
+        z_{m-1} \\ \zeta_m
+    \end{bmatrix},
+\]
+又注意到
+\[
+    V_m = [V_{m-1},v_m],\quad 
+    L_m = 
+    \begin{bmatrix} 
+        L_{m-1} & \\
+        \lambda_m e_{m-1}^T & 1
+    \end{bmatrix},\quad 
+    U_m =
+    \begin{bmatrix} 
+        U_{m-1} & \mu_m e_{m-1} \\
+        & \eta_m
+    \end{bmatrix},
+\]
+因此由$ P_m $的定义
+\[
+    V_m = P_mU_m = 
+    \begin{bmatrix} 
+        P_{m-1} & p_m
+    \end{bmatrix}
+    \begin{bmatrix} 
+        U_{m-1} & \mu_m e_{m-1} \\
+        & \eta_m
+    \end{bmatrix} =
+    \begin{bmatrix} 
+        P_{m-1}U_{m-1} & \mu_mP_{m-1}e_{m-1}-\eta_m p_m
+    \end{bmatrix},
+\]
+其中的$ P_{m-1}U_{m-1} = V_{m-1} $，而$ P_{m-1}e_{m-1} = p_{m-1} $，因此
+\[
+    v_m = \mu_mp_{m-1}-\eta_m p_m,
+\]
+即
+\begin{equation}\label{eq:CGupdate}
+    p_m = \frac{1}{\eta_m}(\mu_m p_{m-1} - v_m).
+\end{equation}
+类似地，对于$ z_m $有$ L_m z_m = \| r^{(0)} \|_2e_1 $，因此
+\[
+    \begin{bmatrix} 
+        L_{m-1} & \\
+        \lambda_m e_{m-1}^T & 1 
+    \end{bmatrix} 
+    \begin{bmatrix} 
+        z_{m-1} \\ \zeta_m
+    \end{bmatrix} = 
+    \begin{bmatrix} 
+        L_{m-1}z_{m-1}\\  \lambda_m e^T_{m-1} z_{m-1} + \zeta_m
+    \end{bmatrix} 
+    = \| r^{(0)} \|_2 e_1,
+\]
+其中$ L_{m-1}z_{m-1} = \| r^{(0)} \|_2e_1' $，$ e^T_{m-1} z_{m-1} = \zeta_{m-1} $，所以
+\[
+    \lambda_m \zeta_{m-1} + \zeta_m = 0,
+\]
+即
+\begin{equation}\label{eq:CGupdate2}
+    \zeta_m = -\lambda_m \zeta_{m-1}.
+\end{equation}
+至此，我们有
+\[
+    \begin{aligned}
+        x^{(m)} &= x^{(0)} + 
+    \begin{bmatrix} 
+        P_{m-1} & p_m 
+    \end{bmatrix} 
+    \begin{bmatrix} 
+        z_{m-1} \\ \zeta_m
+    \end{bmatrix} \\
+    &= x^{(0)}+P_{m-1}z_{m-1} + p_m\zeta_m 
+    \end{aligned}
+\]
+最终得到
+\begin{equation}\label{eq:CG}
+    x^{(m)} = x^{(m-1)} + p_m\zeta_m,
+\end{equation}
+其中$ p_m $和$ \zeta_m $的更新方式由\eqref{eq:CGupdate}和\eqref{eq:CGupdate2}给出。
+
+使用如上方式得到的$ p_m $和$ r^{(i)} $具有一些特殊的性质：
+\begin{theorem}
+    记$ r^{(i)} = b - Ax^{(i)} $是使用如上算法得到的第$ i $次迭代的残差，$ p_i $是由\eqref{eq:CGupdate}给出的更新方式得到的辅助向量，其中$ i=0,1,\cdots ,m $，则
+    \begin{enumerate}
+        \item 第$ i $次迭代中获得的残差$ r^{(i)} $与$ v_{i+1} $共向，即存在常数$ \sigma_i $使得
+        \begin{equation}
+            r^{(i)} = \sigma_i v_{i+1},
+        \end{equation}
+        因此每次迭代得到的残差向量$ r^{(i)} $都与之前的残差向量$ r^{(0)},\cdots ,r^{(i-1)} $互相正交。
+        \item 辅助向量$ p_i $互相关于矩阵$ A $共轭($ A $-正交)，即
+        \begin{equation}
+            p_i^TAp_j = (p_i,p_j)_A = 0,\quad i\neq j,
+        \end{equation}
+        也即$ P_m^TAP_m $是对角阵。
+    \end{enumerate}
+\end{theorem}
+\noindent \emph{Hint:}第一条结论是定理\ref{th:FOM}的自然结果，因为本节使用的对称Lanczos算法是Arnodli算法的特例，因此\ref{th:FOM}仍然成立，即
+\[
+    b - Ax^{(i)} = - \| r^{(0)} \|_2 (e_i^T y)v_{i+1}.
+\]
+第二条结论可以通过直接计算$ P_m^TAP_m $来证明：
+\begin{equation}
+    P_m^TAP_m = U_m^{-T}V_m^{T}AV_mU_m^{-1} = U_m^{-T}T_mU_m^{-1} = U_m^{-T}L_m,
+\end{equation}
+注意到$ U_m^{-T}L_m $是一个下三角阵，而$ P_m^TAP_m $对称，因此$ P_m^TAP_m $是对称的下三角阵，进而是对角阵。
+
+正因为该算法的每次更新的搜索方向$ p_i $之间互相共轭，而$ \zeta_m $是使得$ \| r^{(m)} \|_2 $在该方向上取得极小的极小值点，所以该算法被称为\emph{共轭梯度法}。
+
+通过充分利用$ p_m $和$ \zeta_m $的递推关系和$ p_i $和$ r^{(i)} $的正交性，我们可以不通过更新LU分解而是使用共轭和正交关系得到CG算法的一个更加简洁的更新格式，为此需要计算\eqref{eq:CG}中的$ p_m $和$ \zeta_m $。首先注意到\eqref{eq:CG}等价于
+\[
+    r^{(m)} = r^{(m-1)} - \zeta_m A p_m,
+\]
+因为残差互相正交，因此
+\[
+    \zeta_m = \frac{(r^{(m-1)}, r^{(m-1)})}{(r^{(m-1)}, A p_m)},
+\]
+现在来讨论其中的$ p_m $。根据\eqref{eq:CGupdate}有
+\[
+    p_m = \frac{1}{\eta_m}(\mu_m p_{m-1} - v_m), = \frac{1}{\eta_m}(\mu_m p_{m-1} - \frac{r^{(m-1)}}{\| r^{(0)} \|_2(e_{m-1}^Ty)}),
+\]
+其中$ T_{m-1}y = \| r^{(0)} \|_2 e_1 $，因此$ p_m $是$ p_{m-1} $和$ r^{(m-1)} $的一个线性组合，因为上式中的系数$ \eta_m $和$ \mu_m $涉及到LU分解的更新，我们希望避开这一操作，于是令
+\[
+    q_m = r^{(m-1)} + \beta'_m p_{m-1},
+\]
+我们希望通过挑选$ \beta'_m $使$ q_m $与$ p_m $共线，然后再寻找$ \alpha_m $使得
+\[
+    x^{(m)} = x^{(m-1)} + \alpha_m q_{m}.
+\]
+注意到$ p_{m-1} $与$ q_{m-1} $共线时，$ q_m $可以使用直接使用$ q_{m-1} $和$ r^{(m-1)} $来线性表出，即
+\[
+    q_m = r^{(m-1)} + \beta_m q_{m-1},
+\]
+令$ p_1 = q_1 $，根据归纳法可知通过挑选合适的$ \beta_i $可以一直保证$ q_i $和$ p_i $的共线性，所以在每一步我们需要进行的操作如下所示：
+\begin{equation}
+    \begin{aligned}
+        q_m &= r^{(m-1)} + \beta_m q_{m-1}\\
+        x^{(m)} &= x^{(m-1)} + \alpha_m q_{m}.
+    \end{aligned}
+\end{equation}
+
+现在来确定上述过程中的$ \beta_m $和$ \alpha_m $。首先由$ x^{(m)} = x^{(m-1)} + \alpha_m q_{m} $得
+\[
+    r^{(m)} = r^{(m-1)} - \alpha_m A q_m,
+\]
+也即
+\[
+    \alpha_m = \frac{\| r^{(m-1)} \|_2^2}{(Aq_m,r^{(m-1)})}.
+\]
+而分别将$ q_m = r^{(m-1)} + \beta_m q_{m-1} $的两端同时与$ Aq_m $进行内积可得
+\[
+    (Aq_m,q_m) = (Aq_m,r^{(m-1)}) + \beta_m(Aq_m,q_{m-1}) = (Aq_m,r^{(m-1)}),
+\]
+代回到$ \alpha_m $的表达式中可得
+\[
+    \alpha_m = \frac{\| r^{(m-1)} \|_2^2}{\| q_m \|_A^2}.
+\]
+另一方面，在$ q_m = r^{(m-1)} + \beta_m q_{m-1} $的两端同时与$ Aq_{m-1} $进行内积可得
+\[
+    0 = (Aq_{m-1}, r^{(m-1)}) + \beta(Aq_{m-1},q_{m-1}),
+\]
+注意到其中的$ Aq_{m-1} = (r^{(m-2)}-r^{(m-1)}) / \alpha_{m-1} $，于是
+\[
+    \beta_m = \frac{1}{\alpha_{m-1}} \frac{\| r^{(m-1)} \|_2^2}{\| q_{m-1} \|_A^2} = \frac{\| r^{(m-1)} \|_2^2}{\| r^{(m-2)} \|_2^2}.
+\]
+
+综上，在一次迭代中CG算法依次进行如下操作：
+\begin{equation}
+    \begin{aligned}
+        \beta_m &= \frac{\| r^{(m-1)} \|_2^2}{\| r^{(m-2)} \|_2^2}\\
+        q_m &= r^{(m-1)} + \beta_m q_{m-1},\\
+        \alpha_m &= \frac{\| r^{(m-1)} \|_2^2}{\| q_m \|_A^2},\\
+        x^{(m)} &= x^{(m-1)} + \alpha_m q_{m},\\
+        r^{(m)} &= r^{(m-1)} - \alpha_m A q_m.
+    \end{aligned}
+\end{equation}
+其中获得的$ q_j $互相共轭，$ r^{(j)} $互相正交。具体算法如\ref{alg:CG}所示。
+
+因为$ A\in \mathcal{S}_{++} $非奇异，因此$ A $没有零特征值，于是$ A $的特征多项式$ f(\lambda) = |\lambda I - A| = \lambda^n + a_{n-1}\lambda^{n-1}+\cdots +a_{0} $的常数项$ a_0 $非零。根据Hamilton-Cayley定理$ f(A) = 0 $，即
+\[
+    A^n + a_{n-1}A^{n-1} + \cdots + a_0I = 0,
+\]
+于是
+\[
+    \begin{aligned}
+        r^{(0)} &= - \frac{1}{a_0} (A^n + a_{n-1}A^{n-1} + \cdots +a_1A)r^{(0)}\\
+        &= - \frac{1}{a_0} A(A^{n-1} + a_{n-1}A^{n-2} + \cdots +a_1I)r^{(0)},
+    \end{aligned}
+\]
+如果令$ \delta = -(A^{n-1} + a_{n-1}A^{n-2} + \cdots +a_1I)r^{(0)} / a_0 $，则有
+\[
+    \delta \in \mathcal{K}_n(A,r^{(0)}),\quad A\delta = r^{(0)},
+\]
+因此$ x^{(m)} = x^{(0)} + \delta $是$ Ax = b $的解，所以CG算法在理论上可以在$ n $步内获得正定线性方程组的解。
+
+\begin{algorithm}[htbp]
+    \caption{Restarted Full Orthogonalization Method}\label{alg:RestartFOM}
+    \KwData{$ A\in \mathbb{R}^{n\times n},b $, initial guess $ x^{(0)} $, and an integer $ m $}
+    \KwResult{An approximant solution $ x^{(m)} $.}
+    Initiation: $ i = 0,\ x^{(m)} = x^{(0)} $\;
+    \While{$ \| b - A x^{(m)} \|_2 > \epsilon $ and $ i\leqslant N $ }{
+        $ i=i+1 $\;
+        $ x^{(0)} = x^{(m)} $ \tcc*[r]{Restart}
+        $ r^{(0)} = b - Ax^{(0)} $\;
+        $ v_1 = r^{(0)} / \| r^{(0)} \|_2 $\;
+        $ x^{(m)} = x^{(0)} $\;
+        $ [V_m, H_m] = {\rm ModifiedArnoldi}(A,v_1,m) $ \tcc*[c]{algorithm \ref{alg:ModifiedArnoldi}}
+        Solve $ H_m y = \| r^{(0)} \|_2 e_1 $\;
+        $ x^{(m)} = x^{(m)} + V_m y $\;
+        $ r^{(0)} = b - Ax^{(m)} $\;
+        $ v_1 = r^{(0)} / \| r^{(0)} \|_2 $\;
+    }
+
+    \Return $ x^{(m)} $\;
+\end{algorithm}
+\begin{algorithm}[htbp]
+    \caption{Imcomplete Orthogonalization Method}\label{alg:IOM}
+    \KwData{$ A\in \mathbb{R}^{n\times n},b $, initial guess $ x^{(0)} $, and an integer $ m $}
+    \KwResult{An approximant solution $ x^{(m)} $.}
+    $ r^{(0)} = b - Ax^{(0)} $\;
+    $ v_1 = r^{(0)} / \| r^{(0)} \|_2 $\;
+    \tcc{Do Incomplete orthogonalization to $ v=Av_j $ in MGS style}
+    \For{$ j=1:m $}{
+        $ w_j = Av_j $\;
+        \For{$ i=\textcolor{red}{\max\{1,j+1-k\}}:j $}{
+            $ h_{ij} = (w_j, v_i) $\;
+            $ w_j = w_j - h_{ij}v_i $ \tcc*[c]{Partial orthogonalization about $ v_{j+1-k},\cdots ,v_{j} $}
+        }
+        $ h_{j+1,j} = \| w_j \|_2 $\;
+        \If{$ h_{j+1,j} = 0 $}{
+            Break Down\;
+        }
+        $ v_{j+1} = w_j / h_{j+1,j} $\;
+    }
+    \tcc{Incomplete orthogonalization end}
+    Solve $ H_m y = \| r^{(0)} \|_2 e_1 $\;
+    $ x^{(m)} = x^{(0)} + V_m y $\;
+    \Return $ x^{(m)} $\;
+\end{algorithm}
+\begin{algorithm}[htbp]
+    \caption{Direct Imcomplete Orthogonalization Method}\label{alg:DIOM}
+    \KwData{$ A\in \mathbb{R}^{n\times n},b $, initial guess $ x^{(0)} $, and integers $ m,\ N $,$ \epsilon>0 $}
+    \KwResult{An approximant solution $ x^{(m)} $.}
+    $ m = 0 $\;
+    $ r^{(0)} = b - Ax^{(0)} $\;
+    $ v_1 = r^{(0)} / \| r^{(0)} \|_2 $\;
+    \While{$ \| r^{(m)} \|_2 >\epsilon $ and $ m<N $}{
+        $ m = m+1 $\;
+    \tcc{Do Incomplete orthogonalization to $ v=Av_j $ in MGS style}
+    \For{$ j=1:m $}{
+        $ w_j = Av_j $\;
+        \For{$ i=\textcolor{red}{\max\{1,j+1-k\}}:j $}{
+            $ h_{ij} = (w_j, v_i) $\;
+            $ w_j = w_j - h_{ij}v_i $ \tcc*[c]{Partial orthogonalization about $ v_{j+1-k},\cdots ,v_{j} $}
+        }
+        $ h_{j+1,j} = \| w_j \|_2 $\;
+        \If{$ h_{j+1,j} = 0 $}{
+            Break\;
+        }
+        $ v_{j+1} = w_j / h_{j+1,j} $\;
+    }
+    \tcc{Incomplete orthogonalization end}
+    $ [L_m, U_m] = {\rm LU}(H_m) $ \tcc*[c]{Shall exploit $ [L_{m-1}, U_{m-1}] = {\rm LU}(H_{m-1}) $}
+    \eIf{$ u_{mm} = 0 $}{
+        Stop\;
+    }{
+        \eIf{$ m=1 $}{$ \zeta_m = \| r^{(0)} \|_2 $\;}{$ \zeta_m = -l_{m,m-1}\zeta_{m-1} $\;}
+        $ p_m = (v_m - \sum_{i=\max\{1,m-k+1\}}^{m-1} u_{im} p_i) / u_{mm} $ \tcc*[r]{Calculate $ p_m $}
+        $ x^{(m)} = x^{(m-1)} + p_m \zeta_{m} $ \tcc*[r]{Directly update $ x^{(m)} $}
+    }}
+    \Return $ x^{(m)} $\;
+\end{algorithm}
 
 \begin{algorithm}[htbp]
     \caption{Symmetric Lanczos Method}\label{alg:SymmetricLanczos}
@@ -1458,9 +1828,6 @@ FOM算法的另一种变体是IOM(Imcomplete Orthogonalization Method)，该算�
     \Return $ V_m = (v_1,v_2,\cdots ,v_m),\ T_m $\;
 \end{algorithm}
 
-\subsubsection{共轭梯度法}
-共轭梯度法(CG, Conjugate Gradient Method)是用于求解正定系统的最著名的一种迭代法，它本质上是一种以$ \mathcal{K}_m(A,r^{(0)}) $为搜索空间和约束空间的正交投影方法，因此它是FOM在对称正定条件下的一种特例。基本算法如\ref{alg:CG}所示。
-
 \begin{algorithm}[htbp]
     \caption{Conjugate Gradient Method}\label{alg:CG}
     \KwData{Symmetric positive definite $ A\in \mathbb{R}^{n\times n},b $, initial guess $ x^{(0)} $, and an integer $ m $}
@@ -1478,7 +1845,6 @@ FOM算法的另一种变体是IOM(Imcomplete Orthogonalization Method)，该算�
     }
     \Return $ x^{(m)} $\;
 \end{algorithm}
-
 
 \bibliography{Lib}
 \end{document}
