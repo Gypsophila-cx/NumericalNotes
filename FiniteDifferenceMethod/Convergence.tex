@@ -1,0 +1,816 @@
+\documentclass[a4paper,10pt]{ctexart}
+\input{macros}
+\usepackage{booktabs}
+
+\begin{document}
+\hfill\vbox{\hbox{NPDE-FDM}\hbox{陈曦，HOME}\hbox{Summer, 2024}}
+
+\begin{center}\Large
+    \textbf{微分方程数值解——有限差分法}\\{\normalsize\bf {收敛性分析}}
+\end{center}
+\vskip 30pt
+\small {参考书目：
+\begin{itemize}
+    \item Numerical Partial Differential Equations: Finite Difference Methods （J. W. Thomas，1995）
+    \item Time Dependent Problems and Difference Methods（B. Gustafsson，1995）
+    \item Finite Difference Methods for Ordinary and Partial Differential Equations（Randall J.LeVeque，2007）
+\end{itemize}}
+\vskip 30pt
+一般地，在使用有限差分法(FDM)求解微分方程
+\[
+    L u = f,\quad \text{some BC and IC}
+\]
+时，需要进行如下几个步骤：
+\begin{enumerate}
+    \item 将区域离散化，得到网格；
+    \item 选择差分格式分别用$ L_n $近似微分算子$ L $和离散初边值条件近似原本的初边值条件；
+    \item 使用$ L_n $和离散初边值条件代替$ L $和原初边值条件得到如下等式：
+    \[
+        L_n u = f_n + \tau_n,\quad \text{discrete BC and IC},
+    \]
+    \item 去掉局部截断误差$ \tau $(LTE)，用格点值$ v $代替函数值$ u $得到差分方程:
+    \[
+        L_n v_n = f_n, \quad \text{discrete BC and IC},
+    \]
+    其中$ v_n $是定义在网格上的函数；
+    \item 将差分方程重整为矩阵形式并求解，得到网格上的数值解；
+\end{enumerate}
+粗略地来讲，我们的目标是找到一种方法，使得按照如上步骤得到的数值解$ v_n $随着网格不断加密可以任意地接近真实解$ u $，即
+\[
+    v_n\longrightarrow u,\quad \text{as } n\longrightarrow\infty,
+\]
+其中$ n $控制网格密度，这种性质称为\textbf{收敛性}。为了保证收敛性，一个显然的必要条件是离散得到的差分方程应当足够接近原微分方程，即
+\[
+    L_n \longrightarrow L,\quad \text{as } n\longrightarrow\infty,
+\]
+初边值条件也要相应地满足类似的要求，这种性质称为\textbf{相容性}。然而，哪怕差分问题是原问题的一个良好的离散近似，得到的数值解也很可能出现很大的误差，这是因为(不考虑初边值条件时)数值误差$ e_n=u-v_n $满足
+\[
+    e_n = L_n^{-1} \tau_n,
+\]
+相容性的要求只能保证差分方程的局部截断误差$ \tau_n $足够小，但是当$ L_n $足够病态时，例如当$ L_n $的某个特征值随着$ n $的增大不断接近零时，此时就无法保证$ e_n $随着$ n $的增大而趋于零，因此为了评估使用的数值方法得到的$ L_n $的性质是否足够良好(以避免误差的累积和放大)，我们还需要引入\textbf{稳定性}的概念。
+
+通常证明收敛性有两条路可以走：直接证明，或者先讨论相容性和收敛性再使用Lax定理，即
+\begin{equation}
+    \text{Consistency} + \text{Stability} \Longrightarrow \text{Convergence}.
+\end{equation}
+直接证明往往很困难，因为需要对$ u $和$ v_n $的性质进行详细的分析，而Lax定理则是一个非常有用的工具，它将收敛性的证明分解为了两个相对简单(实际上也比较复杂)的步骤。在接下来的几节中，我们将详细讨论这三个性质。
+
+另外，在上面的简单介绍中不断地使用了收敛和极限，为了严格这一表述，事实上需要将$ v_n $以及$ L_n $定义在合适的赋范线性空间中进行研究，最常用的范数包括$ \ell_\infty $范数、$ \ell_{2} $范数以及能量范数$ \ell_{2, \Delta x} $。
+
+\section{收敛性}
+本节我们详细介绍收敛性的要求，对一些简单的问题直接证明收敛性。
+
+\subsection{初值问题}
+首先考虑只包括初值条件的问题，即
+\[
+    \mathcal{L}v = F,\quad v(x,0) = f(x).
+\]
+记该问题的差分方程形如$ L_k^{(n)}u^{(n)}_k = G^{(n)}_k $，其中上标$ n $代表时间步数，下标$ k $则代表空间步数。
+在实际应用中最常提到的收敛性其实是指逐点收敛性，即
+\begin{definition}
+    给定$ L_k^{(n)}u^{(n)}_k = G^{(n)}_k $是关于微分方程$ \mathcal{L}v=F $的初值问题的一个差分方程。如果该差分格式对于任意的$ x $和$ t $，在$ (k \Delta x,(n+1)\Delta t)\to (x,t) $时都满足
+    \begin{equation}
+        u^{(n)}_k\longrightarrow v(x,t), \quad \text{as } \Delta x,\Delta t\longrightarrow 0,
+    \end{equation}
+    则称该差分格式\textcolor{blue}{逐点收敛}到原问题。
+\end{definition}
+另一种定义方式基于范数，即
+\begin{definition}
+    给定$ L_k^{(n)}u^{(n)}_k = G^{(n)}_k $是关于微分方程$ \mathcal{L}v=F $的初值问题的一个差分方程。如果存在一个(关于空间变量的)范数$ \|\cdot\| $使得对于任意的时刻$ t $，在$ (n+1)\Delta t\to t $时都满足
+    \begin{equation}
+        \|\bm{u}^{(n+1)} - \bm{v}^{(n+1)}\| \longrightarrow 0, \quad \text{as } \Delta x,\Delta t\longrightarrow 0,
+    \end{equation}
+    其中$ \bm{u}^{(n)} = (\cdots ,u_{-1}^{(n)}, u_0^{(n)},u_1^{(n)},\cdots )^T $， $ \bm{v}^{(n)} = (\cdots ,v_{-1}^{(n)}, v_0^{(n)},v_1^{(n)},\cdots )^T $，$ v^{(n)}_k = v(k\Delta x, n \Delta t) $，则称该差分格式\textcolor{blue}{在范数$ \| \cdot \| $下收敛}到原问题。
+\end{definition}
+\noindent 在上面的定义中使用的范数是无穷序列空间中的范数，但是并没有指明范数的种类，当在讨论某种方法的收敛性时，必须明确指出使用的范数。
+
+如上两种定义方式的区别在于，后一种定义因为使用到了空间范数（是整体性质），所以实际上是要求逐点收敛性在空间区域上一致成立，而前一种定义方式只要求逐点收敛性在每个点上各自成立。
+
+类似于线性方程组的迭代算法，对于一种算法，除了讨论它的收敛性，我们还对它的收敛速度感兴趣。
+
+\begin{definition}
+    给定$ L_k^{(n)}u^{(n)}_k = G^{(n)}_k $是关于微分方程$ \mathcal{L}v=F $的初值问题的一个差分方程。如果对于任意的时刻$ t $，在$ (n+1)\Delta t\to t $时都满足
+    \begin{equation}
+        \| \bm{u}^{(n+1)} - \bm{v}^{(n+1)} \| = O(\Delta x^p) + O(\Delta t^q), \quad \text{as } \Delta x,\Delta t\longrightarrow 0,
+    \end{equation}
+    则称该差分格式\textcolor{blue}{在范数$ \| \cdot \| $下$ (p,q) $阶收敛}到原问题。
+\end{definition}
+\noindent 其中的“$ O $”符号表示存在一个（依赖于$ t $的）常数$ C $使得$ \| \bm{u}^{(n+1)} - \bm{v}^{(n+1)} \| \leq C(\Delta x^p + \Delta t^q) $。
+
+在实际应用中，判断一种差分格式是否收敛的最常用的方法是使用Lax定理，而不是直接根据定义，即
+\begin{theorem}
+    对于一个良定的线性初值问题，考虑一种在范数$ \| \cdot \| $下与该初值问题相容的二阶段差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} + \Delta t \bm{G}^{(n)} $，该差分格式对于该初值问题在范数$ \| \cdot \| $下收敛的充要条件是该差分格式在相同的范数下是稳定的。并且当该差分格式是$ (p,q) $阶相容时，如果它具有稳定性，则它在相同的范数下是$ (p,q) $阶收敛的。
+\end{theorem}
+\noindent 其中的良定性是指问题的解存在唯一、且连续依赖于初值条件，本文考虑的问题都仅限于良定问题。另外，只有当Lax定理中的相容性、稳定性和收敛性中使用的范数是一致的时候，定理的结论才成立。根据上面的定理，收敛性的证明就转换为了相容性和稳定性的证明，在后面两节将给出这两个性质的严格定义，其中相容性相对容易判断，稳定性的分析需要更复杂的技巧。
+
+Lax定理的正方向相对容易证明，只需注意到$ \bm{e}^{(n+1)} = Q^{n+1}\bm{e}^{(0)} - \Delta t\sum_{k=0}^n Q^{n-k}\bm{\tau}^{(k)} $，而反方向的讨论更复杂，我们不加证明地使用这一结论，即如果一个差分格式是相容的但却不是稳定的，则它不会收敛到原问题。
+
+\subsection{初边值问题}
+接下来考虑包括初边值条件的问题。当边界条件为Dirichlet边界条件时要考虑的问题形如
+\[
+    \mathcal{L}v = F,\quad v(x,0) = v(x,1)=0,\quad v(0,t) = f(t).
+\]
+此时离散之后应当将$ \bm{u}^{(n)} = (u_0^{(n)},u_1^{(n)},\cdots ,u_M^{(n)}) $放入有限维空间中，随着网格加密，$ M\to\infty $，该空间的维数也不断增加，因此这种情况下我们需要的是一系列有限维的线性赋范空间$ X_j $，其中配备一系列范数$ \| \cdot \|_j $。
+
+\begin{definition}
+    给定$ L_k^{(n)}u^{(n)}_k = G^{(n)}_k $是关于微分方程$ \mathcal{L}v=F $的初边值问题的一个差分方程。如果存在一系列有限维线性赋范空间$ X_j $，其中配备一系列范数$ \| \cdot \|_j $，使得对于任意的时刻$ t $，在$ (n+1)\Delta t\to t $时都满足
+    \begin{equation}
+        \| \bm{u}^{(n)} - \bm{v}^{(n)} \|_j \longrightarrow 0, \quad \text{as } j\to \infty,\Delta t\to 0,
+    \end{equation}
+    则称该差分方程\textcolor{blue}{收敛}到原微分方程。类似地，如果
+    \begin{equation}
+        \| \bm{u}^{(n)} - \bm{v}^{(n)} \|_j = O(\Delta x^p) + O(\Delta t^q), \quad \text{as } j\to \infty,\Delta t\to 0,
+    \end{equation}
+    则称该差分方程\textcolor{blue}{$ (p,q) $阶收敛}到原微分方程。
+\end{definition}
+\noindent 定义中我们考察的是$ \| \bm{u}^{(n)} - \bm{v}^{(n)} \|_j $而非上一节中的$ \| \bm{u}^{(n+1)} - \bm{v}^{(n+1)} \|_j $，这是因为对于初边值问题而言，除了要考虑泛定方程的差分格式的收敛性，还必须讨论边值条件的差分格式的收敛性。如果边值条件的差分格式不收敛，那么即使泛定方程的差分格式收敛，也无法保证数值解的收敛性。因此必须从$ t=0 $，即$ n=0 $的时刻开始考虑，特别是当边界条件为Neumann边界条件时，这一点尤为重要。
+
+下面给出初边值条件版本的Lax定理，与只具有初值条件的问题的区别主要在于相容性和稳定性的分析需要考虑边界条件的离散效果，并且原本固定的范数需要变为一系列范数。
+\begin{theorem}
+    对于一个良定的线性初边值问题，考虑一种在范数族$ \| \cdot \|_j $下与该初边值问题相容的二阶段差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} + \Delta t \bm{G}^{(n)} $，该差分格式对于该初边值问题在范数族$ \| \cdot \|_j $下收敛的充要条件是该差分格式在相同的范数族下是稳定的。并且当该差分格式是$ (p,q) $阶相容时，如果它具有稳定性，则它在相同的范数族下是$ (p,q) $阶收敛的。
+\end{theorem}
+
+\section{相容性}
+差分方法的相容性主要考虑的是在使用差分格式代替原问题时引入的局部截断误差的大小，当存在边界条件时，除了研究微分算子的离散误差外，还需要考虑边界条件的差分格式引入的误差。
+
+\subsection{初值问题}
+延续上一节中的记号，现在对只包含初值条件的问题定义差分格式的相容性。
+\begin{definition}
+    给定$ L_k^{(n)}u^{(n)}_k = G^{(n)}_k $是关于微分方程$ \mathcal{L}v=F $的初值问题的一个差分格式。如果在$ (x,t) $处，当$ (k \Delta x,(n+1)\Delta t)\to (x,t) $时，对于任意光滑函数$ \phi =\phi(x,t) $都有
+    \begin{equation}
+        (\mathcal{L}\phi - F)|_k^{(n)} - [L_k^{(n)}\phi(k \Delta x, n \Delta t)-G_k^{(n)}]\longrightarrow 0, \quad \text{as } \Delta x,\Delta t\longrightarrow 0,
+    \end{equation}
+    则称该差分格式在$ (x,t) $处与原问题\textcolor{blue}{逐点相容}。
+\end{definition}
+
+如果可以将差分格式$ L_k^{(n)}u^{(n)}_k = G^{(n)}_k $写成(无穷维)矩阵形式（二阶段格式：当关于时间的导数阶数为$ 1 $时，只使用$ u^{(n\pm1)}_k $和$ u^{(n)}_k $来近似导数的方法）：
+\begin{equation}
+    \bm{u}^{(n+1)} = Q \bm{u}^{(n)} + \Delta t \bm{G}^{(n)},
+\end{equation}
+其中的$ Q $是一个定义在合适的赋范空间中的线性算子，则我们可以给出更强的一种相容性定义。
+
+\begin{definition}
+    定$ L_k^{(n)}u^{(n)}_k = G^{(n)}_k $是关于微分方程$ \mathcal{L}v=F $的初值问题的一个差分格式。如果存在范数$ \| \cdot \| $使得
+    \begin{equation}
+        \bm{v}^{(n+1)} = Q \bm{v}^{(n)} + \Delta t \bm{G}^{(n)} + \Delta t \bm{\tau}^n
+    \end{equation}
+    中的截断误差$ \bm{\tau}^n $满足
+    \begin{equation}
+        \| \bm{\tau}^n \| \longrightarrow 0, \quad \text{as } \Delta x,\Delta t\longrightarrow 0,
+    \end{equation}
+    则称该差分格式与原问题\textcolor{blue}{关于范数$ \| \cdot \| $相容}。进一步地，如果
+    \begin{equation}
+        \| \bm{\tau}^n \| = O(\Delta x^p) + O(\Delta t^q), \quad \text{as } \Delta x,\Delta t\longrightarrow 0,
+    \end{equation}
+    则称该差分格式与原问题\textcolor{blue}{在范数$ \| \cdot \| $下$ (p,q) $阶相容}。
+\end{definition}
+\noindent 定义中的截断误差$ \bm{\tau}^n $中不仅包含使用差分格式$ L^{(n)}_k $代替$ \mathcal{L} $引入的误差，还包含使用$ G^{(n)}_k $近似$ F $引入的误差。另外，最后的公式中的$ p $和$ q $是截断误差的阶数，而不是收敛性的阶数，并且“$ O $”符号相应的常数$ C $依赖于$ n $但并不依赖于$ k $。
+
+通常我们使用Taylor展开来计算截断误差，而这一方法对于解函数$ v $的光滑性有一定要求，实际上这些光滑性的证明同样也是相容性证明的一部分，但是为了简化讨论，一般直接要求解函数具备这些光滑性。另外，在一点附近的逐点相容性只需要该点邻域内的光滑性，而在范数下的相容性则需要整个空间内的光滑性。
+
+对于隐式格式而言，直接根据差分格式得到的算子形式为
+\[
+    Q_1 \bm{u}^{(n+1)} = Q \bm{u}^{(n)} + \Delta t \bm{G}^{(n\textcolor{red}{+1})},
+\]
+相应的
+\[
+    Q_1 \bm{v}^{(n+1)} = Q \bm{v}^{(n)} + \Delta t \bm{F}^{(n+1)}+ \Delta t \bm{r}^{(n)},
+\]
+其中的$ \bm{r}^{(n)} $称作残差项。为了把上式重新化作和显式格式相同的形式，需要考虑$ Q_1 $的逆，在$ Q_1 $可逆时
+\[
+    \bm{v}^{(n+1)} = Q_1^{-1}Q \bm{v}^{(n)} + \Delta t Q_1^{-1}\bm{F}^{(n+1)}+ \Delta t Q_1^{-1}\bm{r}^{(n)},
+\]
+所以此时需要考察$ \| \bm{\tau}^{(n)} \| := \| Q_1^{-1} \bm{r}^{(n)} \| $，注意到
+\[
+    \| \bm{\tau}^{(n)} \| \leq \| Q_1^{-1} \| \| \bm{r}^{(n)} \|,
+\]
+其中的$ \| Q_1^{-1} \| $是$ Q_1^{-1} $的算子范数，该范数与相应的向量范数相容，因此在考虑隐式格式的相容性时，如果$ \| Q_1^{-1} \| $在$ \Delta t,\Delta x\to 0 $时一致有界，则可以直接使用$ \bm{r}^{(n)} $来考察相容性。当$ Q_1 $具有一些特殊结构时，例如是三对角矩阵(NPDE-FDM Ex.2.3.2)，$ Q_1^{-1} $的算子范数可以通过一些简单的方法计算得到。
+
+最后，当使用范数定义时，$ \ell_{2,\Delta x} $内的能量范数是比$ \ell_{2} $范数更好的选择，因为根据相容性的定义，我们希望证明$ \| \bm{\tau}^{(n)} \|\to 0  $，注意到当$ v $是足够光滑的函数、$ \Delta x $足够小时，如果记以$ \Delta x $和$ \Delta x / 2 $为步长的两个网格上的解分别为$ \bm{v}_{\Delta x} $和$ \bm{v}_{\Delta x / 2} $，则后者的长度是前者的两倍，并且对于$ \bm{v}_{\Delta x} $中的每个分量，$ \bm{v}_{\Delta x / 2} $中都有两个与之相近的分量，因此$ \| \bm{v}_{\Delta x / 2} \|_2 \approx \sqrt{2} \| \bm{v}_{\Delta x} \|_2 $，因此
+\[
+    \| \bm{v}_{\Delta x} \|_2 \longrightarrow \infty, \quad \text{as } \Delta x\longrightarrow 0,
+\]
+这和我们的目的天然地相矛盾，因此$ \ell_{2} $范数并不适合用来定义相容性，而$ \ell_{2,\Delta x} $范数则可以避免这一问题，这一范数按照如下方式定义：
+\begin{equation}
+    \| \bm{v} \|_{2,\Delta x} = \left( \sum_{k=-\infty}^\infty v_k^2 \Delta x \right)^{1 / 2}.
+\end{equation}
+除了能量范数，$ \ell_\infty $中的最大模范数也是一个常用的范数，它的定义如下：
+\begin{equation}
+    \| \bm{v} \|_\infty = \sup_k |v_k|.
+\end{equation}
+\begin{itemize}
+    \item 隐式格式的相容性分析：NPDE-FDM Ex 2.3.2
+    \item 需要二维Taylor展开：NPDE-FDM HW 2.3.1，HW 2.3.5
+\end{itemize}
+
+\subsection{初边值问题}
+和上一节讨论收敛性类似，本小节中的相容性定义需要将上一小节中的所有范数为一系列空间$ X_j $的范数$ \| \cdot \|_j $，同时必须考虑边界条件的差分格式的相容性。
+
+\begin{definition}
+    定$ L_k^{(n)}u^{(n)}_k = G^{(n)}_k $是关于微分方程$ \mathcal{L}v=F $的初边值问题的一个差分格式。如果存在一系列有限维赋范空间$ X_j $，其中的范数为$ \| \cdot \|_j $，使得
+    \begin{equation}
+        \bm{v}^{(n+1)} = Q \bm{v}^{(n)} + \Delta t \bm{G}^{(n)} + \Delta t \bm{\tau}^{(n)}
+    \end{equation}
+    中的截断误差$ \bm{\tau}^{(n)} $满足
+    \begin{equation}
+        \| \bm{\tau}^{(n)} \|_j \longrightarrow 0, \quad \text{as } \Delta x_j,\Delta t\longrightarrow 0,
+    \end{equation}
+    则称该差分格式与原问题\textcolor{blue}{关于范数族$ \| \cdot \|_j $相容}。进一步地，如果
+    \begin{equation}
+        \| \bm{\tau}^{(n)} \|_j = O(\Delta x^p) + O(\Delta t^q), \quad \text{as } \Delta x_j,\Delta t\longrightarrow 0,
+    \end{equation}
+    则称该差分格式与原问题\textcolor{blue}{在范数族$ \| \cdot \|_j $下$ (p,q) $阶相容}。
+\end{definition}
+\noindent 其中$ \tau^{(n)}_0 $和$ \tau^{(n)}_M $分别包含了两个边界条件处的截断误差，一般这两个地方的数值格式是结合了边界条件的差分格式和内部差分格式的，因此往往需要单独特别考虑。只有在内部差分格式和边界条件的差分格式都相容并且阶数相同时，才能保证整个差分格式的相容性具有一致的阶数。几个有代表性的例题：
+\begin{itemize}
+    \item 包含Neumann边界条件：
+    \begin{itemize}
+        \item 使用一阶差分格式：NPDE-FDM Ex.2.3.4
+        \item 换用offset网格：NPDE-FDM Ex.2.3.5
+        \item 使用中心差分(虚点法)：NPDE-FDM Ex.2.3.3
+    \end{itemize}
+    \item 隐式格式：NPDE-FDM Ex.2.3.6
+\end{itemize}
+
+\section{稳定性}
+考察差分格式的稳定性主要需要对算子$ Q $进行研究，事实上如果问题是非齐次的，则该问题的差分格式稳定性与相应的齐次问题相同，这是因为在计算数值误差$ e^{(n)}_k = u^{(n)}_k - v^{(n)}_k $时右端项相互抵消了，只留下局部截断误差$ \tau^{(n)}_k $，因此我们只需要考虑齐次问题的稳定性。和之前一样我们主要讨论二阶段方法。先考虑初值问题。
+
+\subsection{初值问题}
+关于初值问题的二阶段数值格式为
+\[
+    \bm{u}^{(n+1)} = Q \bm{u}^{(n)},
+\]
+将$ \bm{e}^{n} = \bm{u}^{(n)} - \bm{v}^{(n)} $代入上式可得
+\begin{equation}
+    \bm{e}^{(n+1)} = Q \bm{e}^{(n)} - \Delta t\bm{\tau}^{(n)},
+\end{equation}
+不断使用上式可得
+\begin{equation}
+    \bm{e}^{(n+1)} = Q^{n+1} \bm{e}^{(0)} - \Delta t\sum_{k=0}^n Q^{n-k} \bm{\tau}^{(k)}.
+\end{equation}
+由于初值条件可以保证$ \bm{e}^{(0)} = 0 $，因此数值误差取决于上式中的第二项，可以看到第$ k $步的局部截断误差$ \bm{\tau}^{(k)} $累积到最后的$ n+1 $步被放大到了$ Q^{n-k} \bm{\tau}^{(k)} $，所谓的稳定性就是希望$ Q^{n-k} \bm{\tau}^{(k)} $的增长不要太快，即之前各步的误差在时间不断推进时不应该快速地累积增长。显然为了保证这一性质必须要对$ Q $进行一定的限制，从而也对数值格式提出了一定的要求。
+
+\begin{definition}
+    考虑使用有限差分法求解某一初值问题，如果对于差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $而言，存在正的常数$ \Delta x_0 $和$ \Delta t_0 $，以及非负常数$ K $和$ \beta $使得当$ 0\leqslant t=(n+1)\Delta t $，$ 0\leqslant \Delta x\leqslant \Delta x_0 $，$ 0\leqslant \Delta t\leqslant \Delta t_0 $时有
+    \begin{equation}
+        \| \bm{u}^{(n+1)} \| \leqslant K e^{\beta t} \| \bm{u}^{(0)} \| ,
+    \end{equation}
+    则称该差分格式关于该初值问题在\textcolor{blue}{范数$ \| \cdot \| $下是稳定}的。
+\end{definition}
+\noindent 上述定义中要求的增长因子形如$ K e^{\beta t} $，因此解的大小可以随时间$ t $增长而增长，而并不是随着推进的时间步长数$ t / \Delta t $增长而增长。另外，不难发现上面定义中的要求本质上是要求$ Q $关于$ \| \cdot \| $诱导出的算子范数满足
+\[
+    \| Q^n \| = \sup_{\| \bm{u} \| \neq 0} \frac{\| Q^n \bm{u} \|}{\| \bm{u} \|} \leqslant K e^{\beta t},
+\]
+又注意到$ \| Q^n \| \leqslant \| Q \|^n $，因此为使上式成立的一个充分条件是$ \| Q \|\leqslant K(1+\alpha / n) $。于是稳定性的分析转化为了对$ Q $的算子范数的估计。因为$ Q $内部的矩阵元素是和$ \Delta x $和$ \Delta t $有关的，所以当要求$ Q $的算子范数满足上述条件时，$ \Delta x,\Delta t $也需要满足一些限制，如果这些限制总是成立，则称该差分格式是\emph{无条件稳定}的，否则称为是\emph{条件稳定}的。
+
+一般直接通过分析$ Q $的性质来判断稳定性是比较困难的，常用的方法是使用von Neumann分析、有限Fourier级数展开、以及圆盘定理等方法，稍后我们将详细讨论这些方法。
+
+\begin{itemize}
+    \item 最大模范数：NPDE-FDM Ex.2.4.1
+    \item $ \ell_2 $范数：NPDE-FDM Ex.2.4.2
+\end{itemize}
+
+\subsubsection{von Neumann分析}
+本节我们借助离散Fourier变换(DFT)来分析数值格式的稳定性。众所周知，Fourier变换是一种理论求解微分方程的有力工具，它可以将偏微分方程转化为常微分方程、将常微分方程转化为代数方程，从而简化问题的求解。对于离散的差分方程，自然地可以使用离散Fourier变换来进行分析，这一手段的好处在于：根据之前的讨论，要对差分格式的稳定性进行分析就需要考察$ Q $的算子范数的界，根据$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $有
+\[
+    \| \bm{u}^{(n+1)} \| \leqslant  \| Q \| \| \bm{u}^{(n)} \| ,
+\]
+对于初值问题来说，$ Q $是无穷序列空间之间的线性算子，这一算子的性质很难直接分析，而通过DFT我们可以转到频域上进行分析，即对$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $两侧同时进行DFT可得(这一步利用了问题的线性性)
+\begin{equation}
+    \hat{\bm{u}}^{(n+1)} = \hat{Q} \hat{\bm{u}}^{(n)},
+\end{equation}
+因为此时的$ \hat{\bm{u}}^{(n+1)} $和$ \hat{\bm{u}}^{(n)} $都是频域上的标量函数，因此$ \hat{Q} $也退化为了一个标量函数。又根据Parseval定理，$ \| \hat{\bm{u}}^{(n)} \| = \| \bm{u}^{(n)} \| $(左侧是$ L_2 $范数，右侧是$ \ell_2 $范数)，所以不等关系变为
+\[
+    \| \hat{\bm{u}}^{(n+1)} \| \leqslant  | \hat{Q} | \| \hat{\bm{u}}^{(n)} \| ,
+\]
+为了保证稳定性我们要求$ |\hat{Q}|\leqslant 1+\alpha / n $，这一问题通常远比直接要求$ \| Q \| \leqslant 1+\alpha / n $更加容易处理。下面我们来详细介绍这一方法。
+
+首先按如下方式定义离散Fourier变换(DFT)。
+\begin{definition}
+    任意$ \bm{u} = (\cdots ,u_{-1},u_0,u_1,\cdots )\in \ell_2 $，定义它的离散Fourier变换为
+    \begin{equation}
+        \hat{\bm{u}}(\xi) = \frac{1}{\sqrt{2 \pi} }\sum_{k=-\infty}^\infty u_k e^{-i\xi k},\quad \xi\in [-\pi,\pi],
+    \end{equation}
+    并且$ \hat{\bm{u}}\in L_2[-\pi,\pi] $。逆变换为
+    \begin{equation}
+        u_k = \frac{1}{\sqrt{2 \pi} }\int_{-\pi}^\pi \hat{\bm{u}}(\xi) e^{i\xi k} \mathrm{d}\xi,\quad k\in \mathbb{Z}.
+    \end{equation}
+\end{definition}
+\noindent 上述定义中的$ \sqrt{2\pi} $是为了保证变换的归一化，通过更换这一常数的位置和大小DFT有不同的定义，但是这并不影响变换的性质。另外，变换得到的$ \hat{\bm{u}} $的定义域同样可以更换为其他的连续区域，例如令
+\[
+    \hat{\bm{u}}(\xi) = \frac{1}{2\pi} \sum_{k=-\infty}^\infty u_k e^{-2 \pi i\xi k},\quad \xi\in [0,1],\qquad u_k = \int_0^1 \hat{\bm{u}}(\xi) e^{2\pi i\xi k} \mathrm{d}\xi,\quad k\in \mathbb{Z}.
+\]
+不难证明对于DFT，Parseval定理成立，即
+\begin{equation}
+    \| \bm{u} \|_{\ell_2} = \| \hat{\bm{u}} \|_{L_2[-\pi,\pi]},\quad \forall \bm{u}\in \ell_2.
+\end{equation}
+又因为
+\[
+    \| \bm{u} \|_{\ell_{2,\Delta x}} = \left( \sum_{k=-\infty}^\infty u_k^2 \Delta x \right)^{1 / 2} = \sqrt{\Delta x}  \| \bm{u} \|_{\ell_2},
+\]
+而
+\[
+    \| \hat{\bm{u}} \|_{L_2[-\pi,\pi],\Delta x} = \left( \int_{-\pi}^\pi |\hat{\bm{u}}(\xi)|^2 \Delta x\ \mathrm{d}\xi \right)^{1 / 2} = \sqrt{\Delta x}  \| \hat{\bm{u}} \|_{L_2[-\pi,\pi]},
+\]
+因此对于能量范数而言，Parseval定理依然成立，即$ \| \hat{\bm{u}} \|_{L_2[-\pi,\pi],\Delta x} = \| \bm{u} \|_{\ell_2,\Delta x} $。基于以上原因，当存在非负的$ K $和$ \beta $，使得
+\begin{equation}
+    \| \hat{\bm{u}}^{(n+1)} \|_{L_2} \leqslant K e^{\beta (n+1)\Delta t} \| \hat{\bm{u}}^{(0)} \|_{L_2}
+\end{equation}
+时，称变换后的序列$ \{\hat{\bm{u}}^{(n)}\} $在频域空间$ L_2[-\pi,\pi] $内时稳定的。借由Parseval定理，我们可以将序列$ \{\hat{\bm{u}}^{(n)}\} $的稳定性和原序列$ \{\bm{u}^{(n)}\} $的稳定性联系起来，即
+\begin{proposition}
+    关于初值问题的差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $在$ \ell_{2,\Delta x} $范数下稳定的充要条件是相应的离散Fourier变换形式$ \hat{\bm{u}}^{(n+1)} = \hat{Q} \hat{\bm{u}}^{(n)} $给出的序列$ \{\hat{\bm{u}}^{(n)}\} $在$ L_2[-\pi,\pi] $内稳定。
+\end{proposition}
+正如之前所述，使用DFT转换到频域之后的问题转化为了分析$ \{\hat{\bm{u}}^{(n)}\} $的稳定性，而因为$ \hat{\bm{u}}^{(n+1)} = \hat{Q} \hat{\bm{u}}^{(n)} $中的$ \hat{Q} $是一个以$ \xi $为变量的(连续)标量函数，如果记$ \hat{Q} = \rho(\xi) $，则
+\[
+    \hat{\bm{u}}^{(n+1)} = \rho(\xi) \hat{\bm{u}}^{(n)},
+\]
+所以$ \{\hat{\bm{u}}^{(n)}\} $在$ L_2[-\pi,\pi] $内稳定当且仅当
+\begin{equation}
+    | \rho(\xi) |^{n+1} \leqslant Ke^{\beta (n+1)\Delta t},\quad \xi\in [-\pi,\pi],
+\end{equation}
+显然上述要求的一个充分条件是要求$ |\rho(\xi)|\leqslant 1+C \Delta t $对于所有的$ \xi\in [-\pi,\pi] $都成立，这一条件通常更容易处理。总之，稳定性分析由此转化为了对$ \rho(\xi) = \hat{Q} $在频域上的界的分析，基于这一原因称$ \rho(\xi) $为差分格式的\emph{符号}（Symbol）。不过，尽管$ \rho $是标量函数，但是它的函数值可能不是实数，这种情况下需要对$ \rho $的模进行分析。
+
+事实上，$ |\rho(\xi)|\leqslant 1+C \Delta t $的要求对于稳定性而言是充要的，必要性可以通过反证法来证明(NPDE-FDM Prop 3.1.7)。
+\begin{theorem}
+    关于初值问题的差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $在$ \ell_{2,\Delta x} $范数下稳定的充要条件是存在正的常数$ \Delta t_0 $和$ \Delta x_0 $，以及非负的常数$ K $和$ \beta $使得当$ 0\leqslant \Delta t \leqslant \Delta t_0 $，$ 0\leqslant \Delta x\leqslant \Delta x_0 $时有
+    \begin{equation}
+        | \rho(\xi) |^{n+1} \leqslant Ke^{\beta (n+1)\Delta t},\quad \xi\in [-\pi,\pi],
+    \end{equation}
+    也当且仅当存在正的常数$ \Delta t_0 $和$ \Delta x_0 $，以及非负的常数$ C $使得当$ 0\leqslant \Delta t\leqslant \Delta t_0 $，$ 0\leqslant \Delta x\leqslant \Delta x_0 $时有
+    \begin{equation}\label{eq:von-Neumann}
+        \textcolor{red}{| \rho(\xi) | \leqslant 1+C \Delta t,\quad \xi\in [-\pi,\pi]}.
+    \end{equation}
+    条件\eqref{eq:von-Neumann}称为差分格式的\textcolor{red}{von Neumann稳定性条件}。
+\end{theorem}
+\noindent 通常当差分方程中含有零阶项(例如存在孤立的$ \Delta t $: $ u_k^{(n+1)} = ru_{k-1}^{(n)}+(1-2r+\underline{b\Delta t})u^{(n)}_k +ru_{k+1}^{(n)} $ in NPDE-FDM Ex 3.1.5)时，上式中的$ C\ne 0 $。
+
+使用上述定理可以直接得到如下结果，该结论表明根据一种稳定的差分格式可以构造出一系列稳定的差分格式，反过来，为了说明某一差分格式是稳定的，可以直接借由与它同属一类的差分格式的稳定性来完成证明。
+\begin{proposition}
+    如果差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $是稳定的，则对于任意的$ b\in \mathbb{C} $，差分格式
+    \[
+        \bm{u}^{(n+1)} = (Q+b \Delta t I) \bm{u}^{(n)}
+    \]
+    也是稳定的。
+\end{proposition}
+
+另外，借助DFT可以很大程度上简化对隐式格式的相容性分析。记某一隐式差分格式形如$ Q_1 \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $，则根据上一节的讨论，为了保证相容性，需要同时要求$ \| Q_1^{-1} \|_{2,\Delta x} $在$ \Delta t,\Delta x\to 0 $时是一致有界的，并且残差大小$ \| \bm{r}^{(n)} \|_{2,\Delta x} $也趋于零。其中的第一个条件很难直接操作，如下命题使用DFT将这一问题转化为了对$ Q_1 $的符号$ \rho_1 $的分析。
+\begin{proposition}
+    考虑$ Q_1:\ell_{2,\Delta x}\to \ell_{2,\Delta x} $，记它的符号为$ \rho_1 = \rho_1(\xi) $。如果存在$ C>0 $使得
+    \begin{equation}
+        \frac{1}{|\rho_1(\xi)|}\leqslant C,\quad \xi\in [-\pi,\pi],
+    \end{equation}
+    则$ \| Q_1^{-1} \|_{2,\Delta x} \leqslant C $是一直有界的。
+\end{proposition}
+
+\subsection{初边值问题}
+和分析相容性时一样，对于初边值问题，稳定性的分析需要考虑边界条件的差分格式的稳定性，同时因为随着网格加密，差分格式的问题维数也不断增加，因此需要考虑一系列有限维赋范空间$ X_j $，这种情况下稳定性的定义如下：
+\begin{definition}
+    考虑使用有限差分法求解某一初边值问题，如果对于差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $而言，存在正的常数$ \Delta x_0 $和$ \Delta t_0 $，以及非负常数$ K $和$ \beta $使得当$ 0\leqslant t=(n+1)\Delta t $，$ 0\leqslant \Delta x_j\leqslant \Delta x_0 $，$ 0\leqslant \Delta t\leqslant \Delta t_0 $时有
+    \begin{equation}
+        \| \bm{u}^{(n+1)} \|_j \leqslant K e^{\beta t} \| \bm{u}^{(0)} \|_j,
+    \end{equation}
+    则称该差分格式关于该初边值问题在\textcolor{blue}{范数族$ \| \cdot \|_j $下是稳定}的。
+\end{definition}
+相比于单纯的初值问题，初边值问题的$ Q $矩阵的结构更加复杂，特别是当边界条件为Neumann边界条件时，$ Q $往往不具备对称性，这使得稳定性的分析更加困难，因此我们需要引入更高阶的方法来分析稳定性。
+
+在上一小节中我们给出初值问题的差分格式的稳定性需要满足的充要条件，即von Neumann条件，但是\emph{对于初边值问题而言，von Neumann条件仅仅是一个必要条件}。简而言之，如果某一差分格式满足了von Neumann条件，则关于相应的具有周期性边界条件的初边值问题该差分格式是稳定的，然而如果问题的边界条件是非周期性的，那么von Neumann条件不再足以保证稳定性。这是因为von Neumann条件的理论基础是离散Fourier变换，而Fourier级数展开只适用于有界区域上的满足一定光滑性的函数或者整个$ \mathbb{R} $上在无穷远处衰减足够快的函数，当对有界区域上的函数进行Fourier展开时本质上是在对其进行周期延拓后得到的函数进行展开，当问题具有非周期性的边界条件时无法进行周期延拓，因此von Neumann条件不再适用。因此我们不得不回到原本的稳定性定义来重新分析，根据定义如下命题成立。
+
+\begin{proposition}
+    考虑初边值问题的差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $，该差分格式是稳定的当且仅当存在正的常数$ \Delta t_0 $和$ \Delta x_0 $，以及非负的常数$ K $和$ \beta $使得当$ 0\leqslant t=(n+1)\Delta t $，$ 0\leqslant \Delta x_j\leqslant \Delta x_0 $，$ 0\leqslant \Delta t\leqslant \Delta t_0 $时有
+    \begin{equation}
+        \| Q^{n+1} \|_j \leqslant K e^{\beta (n+1)\Delta t}.
+    \end{equation}
+\end{proposition}
+由于对于初边值问题而言，$ Q $是一个维数不断增大的有限维的线性算子，因此可以视作一个矩阵，于是上述命题表明稳定性分析转化为了对$ Q^{n+1} $的矩阵范数进行分析，相比于无穷维空间上的算子，矩阵范数的分析更加容易，通常可以转化为对矩阵特征值的分析，为此我们记
+\[
+    \sigma(Q) = \max\{|\lambda|: \lambda\in \Lambda(Q)\}
+\]
+是$ Q $的谱半径。关于矩阵的谱半径我们有如下结论（数值线性代数 Th 2.1.6）。
+\begin{theorem}
+    给定$ A\in \mathbb{C}^{n \times n} $，则
+    \begin{enumerate}
+        \item 对于任意的矩阵范数$ \| \cdot \| $，有$ \| A \| \geqslant \sigma(A) $；
+        \item 对于任意的$ \epsilon>0 $，存在$ \mathbb{C}^{n\times n} $上的算子范数$ \| \cdot \| $，使得$ \| A \| \leqslant \sigma(A) + \epsilon $。
+    \end{enumerate}
+\end{theorem}
+借助如上结论并利用$ \sigma(Q^n) = \sigma(Q)^n $可得稳定性的一个必要条件。
+\begin{proposition}
+    考虑初边值问题的差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $，该差分格式在$ \ell_{2,\Delta x} $范数下稳定的一个必要条件是存在$ C>0 $使得
+    \begin{equation}
+        \sigma(Q) \leqslant 1+C\Delta t.
+    \end{equation}
+\end{proposition}
+
+特别地，当$ Q $是对称的或者相似于对称矩阵时，上面命题中的条件变为充要条件，这种情况下相应的边界是周期性的，即如下命题成立。
+\begin{proposition}
+    考虑初边值问题的差分格式$ \bm{u}^{(n+1)} = Q \bm{u}^{(n)} $，其中$ Q $满足如下条件之一：
+    \begin{itemize}
+        \item $ Q $是对称矩阵；
+        \item $ Q $不对称，但是存在$ S $满足$ \| S \|_j $和$ \| S^{-1} \|_j $都是一致有界的，并且$ SQS^{-1} $是对称矩阵;
+    \end{itemize}
+    则该差分格式在$ \ell_{2,\Delta x} $范数下稳定的充要条件是存在$ C>0 $使得
+    \[
+           \sigma(Q) \leqslant 1+C \Delta t.
+    \]
+\end{proposition}
+
+\subsubsection{有限Fourier分析}
+如果空间网格为等距的，考虑的是线性常系数差分格式的纯初值问题或者周期边值问题，则Fourier方法可以给出$ L_2 $模稳定性的充要条件。注意Fourier方法只能适用于线性常系数差分格式，不能应用于线性变系数格式或非线性差分格式。
+
+因为当具有边界条件时，$ \bm{u}^{(n)} $是有限维向量，因此经过DFT得到的$ \hat{\bm{u}}^{(n)} $也是有限维向量（把这两个向量看作有限群上的函数，本质上本节的有限Fourier变换是在有限循环群上进行的）。我们首先可以使用有限Fourier变换给出差分格式相应的离散方程的解析解。一般地，离散网格上的函数$ f:\{0,1,\cdots ,L\} = \mathbb{Z}_{L+1}\to \mathbb{R} $的离散Fourier变换和逆变换为
+\begin{equation}
+    \hat{f}(n) = \frac{1}{L+1}\sum_{k=0}^{L} f(k)e^{-2\pi i n k/(L+1)},\quad f(k) = \sum_{j=0}^{L} \hat{f}(j)e^{2\pi ijk/(L+1)}.
+\end{equation}
+如果使用的差分格式的空间网格点为$ \{x_k:x_k=2\pi k / (L+1), k=0,1,\cdots ,L\} $，令$ f(k) = u^{(n)}_k $，于是可得$ \hat{\bm{u}}^{(n)} = \hat{f} $也是一个有限维向量，并且根据逆变换有
+\begin{equation}
+    u^{(n)}_k = \sum_{j=0}^{L} \hat{\bm{u}}^{(n)}(j)e^{2 \pi ij k / (L+1)} = \sum_{j=0}^{L} \hat{\bm{u}}^{(n)}_je^{ijx_k},\quad k=0,1,\cdots ,N-1,
+\end{equation}
+根据差分方程可以得到$ u^{(n+1)}_k $与$ u^{(n)}_k $之间的关系，将上式带入这一关系并利用线性性可得
+\[
+    u_k^{(n+1)} = \sum_{j=0}^L \xi_j(\Delta x, \Delta t) \hat{\bm{u}}^{(n)}_j e^{ijx_k},
+\]
+其中的$ \xi_j $来自于差分格式中$ u^{(n)}_{k\pm i} $项的线性组合给出的系数(注意到$ u^{(n)}_{k\pm \ell} = e^{ij\ell \Delta x} u^{(n)}_k $)。另一方面根据$ u^{(n+1)}_k $自身的DFT有
+\[
+    u^{(n+1)}_k = \sum_{j=0}^L \hat{\bm{u}}^{(n+1)}_j e^{ijx_k},
+\]
+因此根据表出的唯一性可得
+\[
+    \hat{\bm{u}}^{(n+1)}_j = \xi_j(\Delta x, \Delta t) \hat{\bm{u}}^{(n)}_j,
+\]
+重复使用上述关系可得
+\begin{equation}
+    u^{(n)}_k = \sum_{j=0}^L \xi_j^n\cdot \hat{\bm{u}}^{(0)}_j e^{ijx_k}.
+\end{equation}
+其中的$ \hat{\bm{u}}^{(0)}_j $可以由初值条件给出
+\[
+    \hat{\bm{u}}^{(0)}_j = \frac{1}{L+1}\sum_{k=0}^L u^{(0)}_k e^{-ijx_k},
+\]
+因此差分格式的解为
+\begin{equation}
+    u^{(n)}_k = \sum_{j=0}^L \xi_j^n\cdot \left( \frac{1}{L+1}\sum_{\ell=0}^L u^{(0)}_\ell e^{-ijx_\ell} \right) e^{ijx_k} = \frac{1}{L+1}\sum_{\ell=0}^L u^{(0)}_\ell \left( \sum_{j=0}^L \xi_j^n e^{ij(x_k-x_\ell)} \right).
+\end{equation}
+
+接下来我们根据这一结果来进行分析。为了让各Fourier系数保持有界，需要令$ |\xi_j| \leqslant 1 $，如果$ |\xi_j|>1 $，则相应的截断误差将随着$ n $的增大而指数增长；另外，考虑$ t=(n+1)\Delta t $处的解，随着时间步长减小，$ n $将不断增大，因此在$ |\xi_j|>1 $的情况下加细网格会导致数值解不受控制地增长，此时差分格式是不稳定的。为了保证稳定性，我们需要计算出各个$ \xi_j $并对它们进行限制。仔细分析上面的讨论可知，借助差分格式的线性性，可以直接令
+\begin{equation}
+    u^{(n)}_k = \xi_j^n e^{ijx_k},
+\end{equation}
+将上式带入进差分格式就可以得到$ \xi_j $，之后要求
+\begin{equation}
+    |\xi_j| = \left\vert \frac{u^{(n+1)}_k}{u^{(n)}_k} \right\vert \leqslant 1,\quad  j=0,1,\cdots ,L.
+\end{equation}
+给出了$ \Delta x $和$ \Delta t $应当满足的一个约束条件，这一条件称为\textcolor{red}{\emph{离散von Neumann稳定性条件}}。该条件只限制了区域内部的差分格式而没有考虑边界，如果边界条件的差分格式足够好到不破坏稳定性的话，那么满足离散von Neumann稳定性条件的差分方法是稳定的。
+
+事实上，上面的得到的$ \xi_j $与差分格式的系数矩阵$ Q $的特征值有关，这一点可以通过对差分方程使用变量分离法进一步分析(NPDE-FDM Ex 3.2.2)。特别当$ Q $是对称矩阵时(使用的差分格式具有周期边界)，离散von Neumann稳定性条件等价于要求
+\begin{enumerate}
+    \item $ Q $的谱半径小于1；
+    \item 差分方程解的有限Fourier展开中的各项系数关于时间步数$ n $是有界的（但关于时间$ t = (n+1)\Delta t $可能是增长的）。
+\end{enumerate}
+
+但是对于具有一般的边界条件的问题，离散von Neumann稳定性条件仅仅是差分格式具有稳定性的一个必要条件，只有当问题具有有限Fourier形式的解时，离散von Neumann稳定性条件才是充要条件，事实上，对于具有周期边界条件的问题要求满足离散von Neumann稳定性条件，等价于将它经过周期延拓之后再使用上一节中关于初值问题的von Neumann稳定性条件。
+
+\subsubsection{Gerschgorin圆盘定理}
+Gerschgorin圆盘定理是常用的用来估计矩阵特征值的一种工具。对于稳定性分析而言，当边界不是周期性的时候，有限Fourier变换的方法不再适用，此时可以使用Gerschgorin圆盘定理来估计矩阵的谱半径，进而给出满足稳定性的一个必要条件。Gerschgorin圆盘定理的表述如下。
+\begin{theorem}
+    考虑$ A\in \mathbb{C}^{n\times n} $，如果$ \lambda $是$ A $的特征值，则存在$ i $使得
+    \[
+        |\lambda - a_{ii}| \leqslant \sum_{j\ne i} |a_{ij}|.
+    \]
+\end{theorem}
+\noindent 通过对$ A $进行相似变换之后再使用如上结论可以一定程度上得到更好的估计。另外，当$ Q $非对称时，$ Q $的特征值可能是复数，这种情况下使用三角不等式可以得到
+\[
+    | |\lambda| - |a_{ii}| |\leqslant \sum_{j\ne i} |a_{ij}|.
+\]
+由于$ Q $内已经包含了边界离散的信息，因此使用这种方法可以兼顾到边界条件差分格式的稳定性。通过要求$ Q $的各个特征值的上界都小于1，可以保证差分格式的稳定性，所以可以借助圆盘定理可以给出稳定性的一个充分条件。因为这种方法直接研究离散矩阵$ Q $，因此是一种直接矩阵法。
+
+\subsubsection{离散最大模原理}
+对于扩散方程而言，它的解满足最大模原理，即真实解的最大模不会增加，自然地我们希望离散后的差分格式的解也满足这一性质，即数值解的离散最大模也不会增加，这一条件称为\emph{离散最大模原理}。一般地，考虑某良定问题及其一种在$ \ell_\infty $下相容的差分格式，要求差分格式满足离散最大模原理是该格式在离散最大模$ \ell_\infty $下稳定的一个充分条件。
+
+\begin{example}
+    使用FTCS格式求解一维线性扩散方程$ u_t = \kappa u_{xx} $，边界为Dirichlet边界条件，$ u(0,t) = g_1(t),u(1,t) = g_2(t) $，初值为$ u(x,0) = f(x) $。显然这种情况无法使用Fourier方法，下面我们借助离散最大模原理来分析FTCS格式的稳定性。FTCS格式为
+    \[
+        u^{(n+1)}_k = u^{(n)}_k + \frac{\kappa \Delta t}{\Delta x^2} (u^{(n)}_{k+1} - 2u^{(n)}_k + u^{(n)}_{k-1}),
+    \]
+    将右侧合并同类项可得
+    \[
+        u^{(n+1)}_k = (1-2r)u^{(n)}_k + r(u^{(n)}_{k+1} + u^{(n)}_{k-1}), \quad r = \frac{\kappa \Delta t}{\Delta x^2},
+    \]
+    注意到三项的系数之和为$ 1 $，因此当$ r\in [0,1 / 2] $时，$ u^{(n+1)}_k $是$ \{u^{(n)}_k\}_k $的\textcolor{red}{凸组合}（使用离散最大模原理分析稳定性的关键就在凑凸组合），因此
+    \[
+        \max_{k\ne 0,M} |u^{(n+1)}_k| \leqslant \max_k |u^{(n)}_k|,
+    \]
+    其中$ k=1,2,\cdots ,M-1 $，$ M\Delta x = 1 $。而边界上的值由$ u^{(n)}_0 = g_1(t_n),\ u^{(n)}_M = g_2(t_n) $给出，所以$ r = \kappa \Delta t / \Delta x^2\in [0,1 / 2] $时满足离散最大模原理，此时FTCS格式在$ \ell_\infty $下稳定。事实上，这是一个充分条件。
+    
+    如果问题变为\textcolor{blue}{有限区域上的初值问题}，则我们需要额外讨论边界点处的离散，一种方法是使用单侧高阶差分格式，即
+    \[
+        \frac{d^2 f}{dx^2}(x) = \frac{-3f(x)+4f(x+h)-f(x+2h)}{2h} + O(h^2) = \frac{3f(x)-4f(x-h)+f(x-2h)}{2h} + O(h^2),
+    \]
+    于是边界处的差分格式为
+    \[
+        \begin{aligned}
+            \frac{u^{(n+1)}_0 - u^{(n)}_0}{\Delta t} &= \kappa \frac{-3u^{(n)}_0 + 4u^{(n)}_1 - u^{(n)}_2}{2\Delta x},\\
+            \frac{u^{(n+1)}_M - u^{(n)}_M}{\Delta t} &= \kappa \frac{3u^{(n)}_M - 4u^{(n)}_{M-1} + u^{(n)}_{M-2}}{2\Delta x},
+        \end{aligned}
+    \]
+    整理后可得
+    \[
+        \begin{aligned}
+            u^{(n+1)}_0 &= (1-\frac{3r}{2})u^{(n)}_0 +  2ru^{(n)}_1 - \frac{r}{2}u^{(n)}_2,\\
+            u^{(n+1)}_M &= (1+\frac{3r}{2})u^{(n)}_M - 2ru^{(n)}_{M-1} + \frac{r}{2}u^{(n)}_{M-2},
+        \end{aligned}
+    \]
+    除非$ r= 0 $，否则上式无法视作是$ u^{(n+1)}_0 $和$ u^{(n+1)}_M $的凸组合，因此这种情况下离散最大模原理无法给出任何关于稳定性的信息，这种情况下需要使用其他方法来分析稳定性。另一种可能的边界离散方法是继续使用中心差分，但是要引入虚点$ x_{-1} $和$ x_{M+1} $，并要求
+    \[
+        \frac{u^{(n)}_{-1} + u^{(n)}_{1}}{2} = u^{(n)}_0 = g_1(t_n),\quad \frac{u^{(n)}_{M-1} + u^{(n)}_{M+1}}{2} = u^{(n)}_M = g_2(t_n).
+    \]
+\end{example}
+
+\subsubsection{冻结系数法}
+冻结系数法是一种用来分析\emph{变系数线性}问题的差分格式稳定性的方法，一般有如下几个步骤：
+\begin{enumerate}
+    \item 在某一区间上将变系数方程的系数冻结为某常值，离散得到的常系数方程以获得一个常系数差分格式；
+    \item 使用其他稳定性分析工具来讨论该常系数差分格式的稳定性；
+    \item 综合所有的系数冻结得到的模糊稳定性结论，取各区间上模糊稳定性结论的交集。
+\end{enumerate}
+尽管冻结系数法是一种近似方法，即它给出的稳定性条件是一种模糊的要求，不过这种方法给出的结论往往还是具有足够的参考价值的，为了减少数值模拟不稳定的风险，时空约束的上界常被缩小到原来的$ 60\%\sim 80\% $。冻结系数法的缺点在它忽略了系数变化带来的影响，在某些问题，尤其是双曲方程的无耗散格式中，可能会导致部分简谐波出现无法控制的增长，该现象称为\emph{线性变系数不稳定现象}。
+\begin{example}
+    考虑一维变系数扩散方程$ u_t = \kappa(x,t)u_{xx} $，边界条件为Dirichlet边界条件($ g_1,g_2 $)，初值为$ u(x,0) = f(x) $，分析FTCS格式的稳定性，直接在离散焦点$ (x_j,t_n) $处冻结系数，得到差分格式为
+    \[
+        \frac{u^{(n+1)}_j - u^{(n)}_j}{\Delta t} = \kappa_j^{(n)} \frac{u^{(n)}_{j+1} - 2u^{(n)}_j + u^{(n)}_{j-1}}{\Delta x^2},
+    \]
+    根据上一小节中例子内的分析，我们知道这一差分格式在$ \kappa^{(n)}_j \Delta t / \Delta x^2 \in [0, 1/2] $时稳定，因此只要保证$ \kappa^{(n)}_j \Delta t / \Delta x^2 \in [0, 1/2] $对所有$ j,n $成立，就可以保证整个差分格式的稳定性，所以稳定性条件为
+    \[
+        \max_{j,n} \frac{\kappa^{(n)}_j \Delta t}{\Delta x^2} \leqslant \frac{1}{2}.
+    \]
+\end{example}
+
+\subsubsection{能量法}
+与在频域操作的Fourier方法不同，能量法是一种直接在物理空间(即时域)进行的稳定性分析方法，因为无需转换空间因此适用范围更广，可以用于处理线性变系数、非周期边界、以及非等距网格等问题，不过能量法对分析技巧的要求要更高。使用能量法分析稳定性的一般步骤如下：
+\begin{enumerate}
+    \item 选取恰当的检验函数，建立能量范数的递推关系式；
+    \item 指出能量范数与离散$ L^2 $范数间的等价关系；
+    \item 给出差分格式满足$ L^2 $模稳定性的一个充分条件。
+\end{enumerate}
+\begin{example}
+    考虑守恒性扩散方程$ u_t = (a(x,t)u_x)_x $及对其使用积分插值方法得到的显式格式：
+    \[
+        \frac{u^{(n+1)}_j - u^{(n)}_j}{\Delta t} = \frac{a_{j+1 / 2}^{(n)}\frac{u^{(n)}_{j+1}-u^{(n)}_{j}}{\Delta x} - a_{j-1 / 2}^{(n)}\frac{u^{(n)}_{j}-u^{(n)}_{j-1}}{\Delta x}}{\Delta x}
+    \]
+    我们把该差分格式简写为$ \delta_{t+}u^{(n)}_j = r\delta_x(a^{(n)}_j \delta_xu^{(n)}_j) = r \delta_{x-}(a^{(n)}_{j+1/2}\delta_{x+}u^{(n)}_j) $，其中$ r = \Delta t / \Delta x^2 $，
+    \[
+        \delta_{t+}u^{(n)}_j = u^{(n+1)}_j - u^{(n)}_j,\quad \delta_xu^{(n)}_j = u^{(n)}_{j+1 / 2} - u^{(n)}_{j- 1/ 2},\quad \delta_{x+}u^{(n)}_j = u^{(n)}_{j+1} - u^{(n)}_j,\quad \delta_{x-}u^{(n)}_j = u^{(n)}_j - u^{(n)}_{j-1},
+    \]
+    下面我们使用能量法分析该差分格式的稳定性。首先在差分格式的两端同时乘上$ u^{(n+1)}_j+u^{(n)}_j $可得
+    \[
+        [(u^{(n+1)}_j)^2 - (u^{(n)}_j)^2]\Delta x = \frac{\Delta t}{\Delta x}\delta_{x-}(a^{(n)}_{j+1/2}\delta_{x+}u^{(n)}_j)(u^{(n+1)}_j+u^{(n)}_j),
+    \]
+    对两侧关于$ j $分别求和可得
+    \[
+        \sum_{j=0}^{M-1} [(u^{(n+1)}_j)^2 - (u^{(n)}_j)^2]\Delta x = \sum_{j=0}^{M-1} \frac{\Delta t}{\Delta x}\delta_{x-}(a^{(n)}_{j+1/2}\delta_{x+}u^{(n)}_j)(u^{(n+1)}_j+u^{(n)}_j),
+    \]
+    如果边界为周期性边界，即$ u^{(n)}_0 = u^{(n)}_M $，则对上式右侧进行\textcolor{blue}{离散分部积分}可知
+    \[
+        \sum_{j=0}^{M-1} \textcolor{red}{\delta_{x-}(a^{(n)}_{j+1/2}\delta_{x+}u^{(n)}_j)}(u^{(n+1)}_j+u^{(n)}_j) = \textcolor{red}{-}\sum_{j=0}^{M-1} (a^{(n)}_{j+1/2}\delta_{x+}u^{(n)}_j) \textcolor{red}{\delta_{x+}(u^{(n+1)}_j+u^{(n)}_j)}.
+    \]
+    现在我们定义该离散系统的\textcolor{blue}{能量范数}（的平方，尽管它可能不满足范数的定义）为
+    \begin{equation}
+        \mathcal{E}(\bm{u}^{(n)}) = \sum_{j=0}^{M-1} (u^{(n)}_j)^2\Delta x - \frac{\Delta t}{2\Delta x}\sum_{j=0}^{M-1} a^{(n)}_{j+1/2}(\delta_{x+}u^{(n)}_j)^2,
+    \end{equation}
+    如果$ a(x,t) = a(x) $不随$ t $变化，则注意到$ p(p+q) = \frac{1}{2}(p+q)^2 + \frac{1}{2}(p^2-q^2) $可得
+    \[
+        \begin{aligned}
+            \mathcal{E}(\bm{u}^{(n+1)}) - \mathcal{E}(\bm{u}^{(n)}) 
+            &= \sum_{j=0}^{M-1} [(u^{(n+1)}_j)^2 - (u^{(n)}_j)^2]\Delta x - \frac{\Delta t}{2\Delta x} \sum_{j=0}^{M-1} a_{j+1/2} \left[(\delta_{x+}u^{(n+1)}_j)^2 - (\delta_{x+}u^{(n)}_j)^2 \right] \\
+            &= - \frac{\Delta t}{\Delta x} \sum_{j=0}^{M-1} a_{j+1/2} \left(\delta_{x+}u^{(n)}_j \cdot(\delta_{x+}u^{(n+1)}_j+\delta_{x+}u^{(n)}_j) - \frac{(\delta_{x+}u^{(n)}_j)^2 - (\delta_{x+}u^{(n+1)}_j)^2}{2} \right) \\
+            &= -\frac{\Delta t}{2\Delta x}\sum_{j=0}^{M-1} a_{j+1/2}[\delta_{x+}(u^{(n+1)}_{j}+u^{(n)}_j)]^2 \leqslant 0,
+        \end{aligned}
+    \]
+    所以离散能量不会随时间增长。另一方面，因为$ \delta_{x+}u^{(n)}_j = u^{(n)}_{j+1}-u^{(n)}_j $，所以由均值不等式可得
+    \[
+        (\delta_{x+}u^{(n)}_j)^2 = (u^{(n)}_{j+1}-u^{(n)}_j)^2 \leqslant 2(u^{(n)}_{j+1})^2 + 2(u^{(n)}_j)^2,
+    \]
+    于是
+    \[
+        \sum_{j=0}^{M-1} a_{j+1/2}(\delta_{x+}u^{(n)}_j)^2 \leqslant 4\max_{x}a\sum_{j=0}^{M-1} (u^{(n)}_j)^2,
+    \]
+    进而
+    \[
+        \mathcal{E}(\bm{u}^{(n)}) \geqslant (1-2r\max_{x}a)\sum_{j=0}^{M-1} (u^{(n)}_j)^2\Delta x,
+    \]
+    根据$ \mathcal{E} $的不增性可知
+    \[
+        (1-2r\max_{x}a)\sum_{j=0}^{M-1} (u^{(n)}_j)^2\Delta x \leqslant \mathcal{E}(\bm{u}^{(0)})\leqslant \sum_{j=0}^{M-1} (u^{(0)}_j)^2\Delta x,
+    \]
+    因此
+    \[
+        \| u^{(n)} \|_{2,\Delta x}^2\leqslant \frac{1}{1-2r\max_{x,t}a}\| u^{(0)} \|_{2,\Delta x}^2,
+    \]
+    所以如果存在$ \delta>0 $使得$ 1-2r\max_{x,t}a\geqslant \delta $，则差分格式在$ \ell_{2,\Delta x} $下稳定。
+\end{example}
+如果定义以下几种内积
+\[
+    \begin{aligned}
+        \left<u,v\right> = \sum_{j=1}^{M-1} u_jv_j\Delta x,\quad \left[u,v\right] = \sum_{j=0}^{M} u_jv_j\Delta x,\\
+        \left[u,v\right> = \sum_{j=0}^{M-1} u_jv_j\Delta x,\quad \left<u,v\right] = \sum_{j=1}^{M} u_jv_j\Delta x,
+    \end{aligned}
+\]
+则通过改变求和顺序可以得到离散版本的分布积分公式，即分布求和公式：
+\begin{equation}
+    \left<\delta_{+}u,v\right> = (u_Mv_M-u_1v_0) - \left<a, \delta_-v\right].
+\end{equation}
+进而可得离散Green公式:
+\begin{eqnarray}
+    \left<\delta_+(a \delta_- u), v\right> &=& (a_M \delta_-u_M v_M - a_1\delta_-u_1v_0) - \left<a\delta_-u, \delta_-v\right].\\
+    \left<\delta_+(a \delta_- u), v\right> - \left<\delta_+(a \delta_- v), u\right> &=& a_M(v \delta_-u_M-u\delta_-v_M) - a_1(v\delta_+u_0-u\delta_+v_0).
+\end{eqnarray}
+另外，在使用能量法时我们往往需要使用到以下几个不等式：
+\begin{enumerate}
+    \item $ \epsilon-ab $不等式：
+    \begin{equation}
+        |ab| \leqslant \epsilon a^2 + \frac{1}{4 \epsilon}b^2,\quad \epsilon>0.
+    \end{equation}
+    \item Cauchy-Schwarz不等式：
+    \begin{equation}
+        |\left<u, v\right>|^2\leqslant \| u \|_2\| v \|_2,\quad |\left<u,v \right]|^2\leqslant \sqrt{\left<u,u \right] \cdot \left<v,v \right]} ,\quad \cdots 
+    \end{equation}
+    \item 离散范数间的相互控制，例如给定零边界条件$ u_0=u_M=0 $时
+    \begin{equation}
+        \frac{1}{2}\left[\delta_+ u, \delta_+ u\right>\leqslant \| u \|_2 \leqslant \frac{L}{\sqrt{8} \Delta x}\left<\delta_+ u, \delta_+ u\right].
+    \end{equation}
+\end{enumerate}
+\begin{example}
+    考虑变系数行波方程$ u_t + au_x = 0 $，其中$ a $恒大于零且$ a_x $有界，冻结系数之后使用迎风格式(FTFS)求解相应的初值问题
+    \[
+        u^{(n+1)}_j = u^{(n)}_j - \frac{\Delta t}{\Delta x}a_j^{(n)}(u^{(n)}_j - u^{(n)}_{j-1}) = (1-r_j^{(n)})u^{(n)}_j + r_j^{(n)}u^{(n)}_{j-1},\quad r_j^{(n)} = \frac{\Delta t}{\Delta x}a_j^{(n)}.
+    \]
+    首先根据CFL条件，我们要求$ r_j^{(n)}\leqslant 1 $对所有的$ j,n $成立，即
+    \[
+        \max_{j,n} a_j^{(n)} \frac{\Delta t}{\Delta x} \leqslant 1.  
+    \]
+    当满足CFL条件时，$ u^{(n+1)}_j $是$ \{u^{(n)}_j\}_j $的凸组合，注意到$ f(x)=x^2 $是凸函数，因此
+    \[
+        (u^{(n+1)}_j)^2 \leqslant (1-r_j^{(n)})(u^{(n)}_j)^2 + r_j^{(n)}(u^{(n)}_{j-1})^2.
+    \]
+    又因为$ a_x $有界，所以存在$ B $使得$ |a^{(n)}_j-a^{(n)}_{j-1}|\leqslant B \Delta t $恒成立，于是
+    \[
+        (u^{(n+1)}_j)^2 \leqslant (1-r_j^{(n)})(u^{(n)}_j)^2 + r_{j-1}^{(n)}(u^{(n)}_{j-1})^2 + Br(u^{(n)}_{j-1})^2 \Delta t,
+    \]
+    其中$ r = \Delta t / \Delta x $。上式两侧分别对$ j $求和可得
+    \[
+        \| u^{(n+1)} \|_2^2 \leqslant (1+Br \Delta t)\| u^{(n)} \|_2^2
+    \]
+    所以迎风格式在$ \ell_2 $范数下，进而在$ \ell_{2,\Delta x} $范数下稳定。
+\end{example}
+更多内容参见TDPDM第11章以及微分方程数值方法（胡健伟、汤怀民，2004）等文献。
+
+\subsubsection{分离变量法}
+对于连续的偏微分初边值问题，分离变量法可以给出问题的一个解析解，类似地可以对差分方程使用分离变量法以得到差分方程解的一个解析形式，根据数值解的这一准确形式，我们可以给出差分格式的稳定性条件。对于复杂的问题，分离变量法给出的解析解可能难以分析或直接不能求解(特别是当复杂问题对应的特征值问题难以求解时)，因此分离变量法的应用范围相对有限。
+\begin{example}
+    考虑一维线性常系数扩散方程$ u_t = \kappa u_{xx} $在$ [-1,1] $上的初边值问题，边界为Dirichlet边界条件（$ g_1=g_2=0 $），初值条件为$ u(x,0) = f(x) $，使用FTCS格式求解该问题：
+    \[
+        u^{(n+1)}_j = u^{(n)}_j + \frac{\kappa \Delta t}{\Delta x^2} (u^{(n)}_{j+1} - 2u^{(n)}_j + u^{(n)}_{j-1}) = (1-2r)u^{(n)}_j + r(u^{(n)}_{j+1} + u^{(n)}_{j-1}),\quad r = \frac{\kappa \Delta t}{\Delta x^2}.
+    \]
+    下面使用分离变量法分析该格式的稳定性。令
+    \begin{equation}
+        \textcolor{blue}{u^{(n)}_j = X_k T^n},
+    \end{equation}
+    将上式代入差分格式可得
+    \[
+        \frac{T^{n+1}}{T^n} = \frac{rX_{j-1}+(1-2r)X_j+rX_{j+1}}{X_j},
+    \]
+    因为$ T $不会随$ j $变化，$ X $不会随$ n $变化，所以上式两侧等于某常数$ \lambda $。现在考虑特征值问题：
+    \[
+        \begin{aligned}
+            T^{n+1} &= \lambda T^n,\\
+            rX_{j-1}+(1-2r)X_j+rX_{j+1} &= \lambda X_j,
+        \end{aligned}
+    \]
+    并且根据边界条件可知$ X_0 = X_M = 0 $。记$ \bm{X} = (X_1,X_2,\cdots ,X_{M-1}) $，于是第二个方程可以写成矩阵形式
+    \[
+        \begin{pmatrix}
+            1-2r & r & 0 & \cdots & 0\\
+            r & 1-2r & r & \cdots & 0\\
+            0 & r & 1-2r & \cdots & 0\\
+            \vdots & \vdots & \vdots & \ddots & \vdots\\
+            0 & 0 & 0 & \cdots & 1-2r
+        \end{pmatrix}
+        \begin{pmatrix}
+            X_1\\
+            X_2\\
+            \vdots\\
+            X_{M-1}
+        \end{pmatrix}
+        = \lambda
+        \begin{pmatrix}
+            X_1\\
+            X_2\\
+            \vdots\\
+            X_{M-1}
+        \end{pmatrix},
+    \]
+    所以$ X $和$ \lambda $是上面系数矩阵$ Q $的特征向量和特征值。回忆对于以$ a $作为对角元、$ b $作为次对角元的对称三对角矩阵的特征多项式$ f_n(\lambda) = |\lambda I -Q_n| $满足$ f_{n+1}(\lambda) = (\lambda-a)f_n(\lambda)-b^2f_{n-1}(\lambda) $，该矩阵的特征值为
+    \[
+        \lambda_k = a-2b\cos\left( \frac{k\pi}{n+1} \right) ,\quad k=1,2,\cdots ,n,
+    \]
+    当此对角元分别为$ b,c $时，特征值为
+    \[
+        \lambda_k = a-2\sqrt{bc} \cos\left( \frac{k\pi}{n+1} \right) ,\quad k=1,2,\cdots ,n.  
+    \]
+    带入$ a=1-2r,b=r $我们可以求出$ Q_{M-1} $的特征值及其相应的特征向量为
+    \[
+        \lambda_k = 1-4r\sin^2\left( \frac{k \pi \Delta x}{2} \right),\ \bm{X}_k = (\sin(k\pi\Delta x),\cdots \sin(k\pi j\Delta x),\cdots ,\sin(k\pi(M-1)\Delta x)),\ k=1,2,\cdots ,M-1,
+    \]
+    因为稳定性的一个必要条件是$ \sigma(Q)\leqslant 1+C\Delta t $，注意到此时FTCS格式中没有$ \Delta t $这类零阶导数项，所以我们要求各个特征值$ \lambda_k $的模小于$ 1 $，即
+    \[
+        |1-4r\sin^2\left( \frac{k \pi \Delta x}{2} \right)| \leqslant 1,\quad k=1,2,\cdots ,M-1,  
+    \]
+    此即为FTCS格式在$ \ell_{2,\Delta x} $范数下的稳定性条件。如果考虑的是$ u_t = \kappa u_{xx}+b\textcolor{red}{u} $的类似问题(NPDE-FDM Ex 3.1.5)，则差分格式中会出现$ \Delta t $，此时各个特征值都要添加$ b \Delta t $，稳定性条件变为
+    \[
+        |1-4r\sin^2\left( \frac{k \pi \Delta x}{2} \right)+b\Delta t| \leqslant 1+b\Delta t\leqslant e^{b \Delta t},\quad k=1,2,\cdots ,M-1,
+    \]
+    该条件可以保证
+    \[
+        \| u^{(n+1)} \|_{2,\Delta x}\leqslant e^{b (n+1)\Delta t}\| u^{(0)} \|_{2,\Delta x},
+    \]
+    因此该FTCS格式在$ \ell_{2,\Delta x} $下稳定。
+    下面我们更进一步，构造出差分方程的解析解。得到各个特征值$ \lambda_k $之后，根据第一个方程相应地有
+    \[
+        T^n = \lambda_k T^{n-1} = \cdots = \lambda_k^n T^0,
+    \]
+    因此差分方程的解为
+    \begin{equation}
+        u^{(n)}_j = \sum_{k=1}^{M-1} c_j T^n X_k = \sum_{k=1}^{M-1} c_j \lambda_k^n T^0 X_k = \sum_{k=1}^{M-1} c_j \lambda_k^n \sin(k\pi j\Delta x)T^0,
+    \end{equation}
+    其中$ c_jT^0 $由初值条件给出。从这一解析解可以看出要保证数值解的增长可以被初值控制，必须令$ |\lambda_k|\leqslant 1 $对所有$ k $成立，此即分离变量法给出的稳定性条件。
+\end{example}
+注意到在上面的例子中，我们不需要得到特征向量，只需要特征值，所以除了直接计算矩阵的特征多项式的根以得到特征值，也可以使用之前的有限Fourier变换来快速得到特征值。由于问题时域为$ [-1,1] $，因此取单波解
+\[
+    \textcolor{red}{X_j = \hat{X}_k e^{ik\pi x_j}},
+\]
+其中$ k = 1,2,\cdots ,M-1 $为波数，$ x_j = -1+2 / M $，带入特征值问题$ rX_{j-1}+(1-2r)X_j+rX_{j+1} = \lambda X_j $可得
+\[
+    \lambda = 1-4r\sin^2\left( \frac{k \pi \Delta x}{2} \right) = 1-4r\sin^2\left( \frac{k \pi}{M} \right).
+\]
+如果考虑$ [-\pi,\pi] $上的问题，相应地应当令
+\[
+    X_j = \hat{X}_k e^{ik x_j},
+\]
+其中空间离散步长变为$ \Delta x = 2\pi / M $，特征值集保持不变。
+
+\subsubsection{CFL法}
+对于双曲型方程，CFL条件是差分格式具有稳定性的一个必要条件，它要求问题的真实解的初值依赖区域必须（至少在$ \Delta t,\Delta x\to 0 $）时被包含在由差分格式给出的数值解的数值初值依赖区域以内。
+
+\subsubsection{修正方程法}
+最后简单介绍一下修正方程法（MPDE），该方法的主要思想是将差分格式的截断误差的主要部分作为修正项添加到原偏微分方程中得到修正方程，同原本的偏微分方程相比，差分格式更加相容于修正方程，两者的性质和表现更加接近，因此可以通过分析修正方程的\emph{适定性}来得到差分格式的模糊的稳定性条件。
+
+修正方程法的操作分为以下两步：
+\begin{enumerate}
+    \item 由差分方程出发，构造含有网格参数$ \Delta t $或$ \Delta x $的修正方程；
+    \begin{enumerate}
+        \item 假设网格函数$ u^{(n)}_j $是由光滑函数$ w(x,t) $限制而来，通过逐点进行Taylor展开可以由差分方程得到关于$ w $的一个处处成立的微分恒等式，通常是一个级数；
+        \item 假设上述微分恒等式可以逐项求导，依次将不同阶数的时间导数转化为空间导数并进行截断和化简，最终得到修正方程
+        \begin{equation}
+            w_t = \mathcal{L}w = \sum_{\ell=0}^m \alpha_\ell D_x^\ell w,
+        \end{equation}
+        其中$ m $是适当选取的正整数，$ \alpha_\ell $可能与$ \Delta t,\Delta x $有关，$ D_x $是空间导数算子；
+    \end{enumerate}
+    \item 借助修正方程的性质解释差分方程的数值表现。
+    \begin{enumerate}
+        \item 如果修正方程是良定的，则差分格式是稳定的；反之，如果修正方程是病态的，则差分格式是不稳定的；
+        \item 如果修正方程具有耗散或色散性质，则差分格式也具有相近的数值耗散或数值色散性。
+    \end{enumerate}
+\end{enumerate}
+\begin{example}
+    考虑一维常系数对流方程$ u_t + a u_x = 0 $，下面使用修正方程法说明该FTCS格式是不稳定的。首先我们假设$ u^{(n)}_j $是由光滑函数$ w(x,t) $限制而来，FTCS格式的差分方程为
+    \[
+        \frac{u^{(n+1)}_j - u^{(n)}_j}{\Delta t} + a \frac{u^{(n)}_{j+1} - u^{(n)}_{j-1}}{2\Delta x} = 0,
+    \]
+    通过逐点Taylor展开可得
+    \begin{equation}\label{eq:FTCS_w}
+        w_t + a w_x + \frac{1}{2}\Delta t w_{tt} + O(\Delta t^2) + O(\Delta x^2) = 0,
+    \end{equation}
+    对上式分别关于$ t $和$ x $求导得
+    \[
+        \begin{aligned}
+            w_{tt} + a w_{tx} + \frac{1}{2}\Delta t w_{ttt} + O(\Delta t^2) + O(\Delta x^2) &= 0,\\
+            w_{xt} + a w_{xx} + \frac{1}{2}\Delta t w_{xtt} + O(\Delta t^2) + O(\Delta x^2) &= 0,
+        \end{aligned}
+    \]
+    将上述两式代入\eqref{eq:FTCS_w}可以\textcolor{blue}{将时间导数变为空间导数}
+    \[
+        w_t + a w_x + \frac{a^2}{2}\Delta t w_{xx} + O(\Delta t^2) + O(\Delta x^2) = 0,
+    \]
+    令修正方程为
+    \[
+        w_t + a w_x = \textcolor{red}{- \frac{a^2}{2}\Delta t w_{xx}},  
+    \]
+    因为修正方程中的扩散系数为负数，因此修正方程是病态的，所以FTCS格式是不稳定的。我们可以将$ - a^2 \Delta t w_{xx} / 2 $的差分离散项从FTCS中减去以获得一个更好的数值格式(LW格式)，相应的数值修正项称为\textcolor{blue}{数值粘性项}。
+\end{example}
+
+关于对流扩散方程
+\begin{equation}
+    u_t+au_x = bu_{xx},
+\end{equation}
+当扩散系数$ b>0 $时该方程良定，并且$ b $越大，各简谐波的衰减速度就越快，方程的适定性越好，因此修正方程中的数值粘性项系数越大，该修正方程的适定性越好，差分格式的稳定性也就越好。
+
+以上的分析没有使用到边界信息，因此这类方法只适合于初值问题以及具有Dirichlet边界或周期性边界的初边值问题。更详细的介绍和分析参见偏微分方程的有限差分法一书的9.2节(暑期学校讲义附录A)、NPDE-FDM的7.7节。
+\end{document}

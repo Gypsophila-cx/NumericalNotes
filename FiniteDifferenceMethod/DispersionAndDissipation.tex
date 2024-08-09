@@ -1,0 +1,177 @@
+\documentclass[a4paper,10pt]{ctexart}
+\input{macros}
+\usepackage{booktabs}
+
+\begin{document}
+\hfill\vbox{\hbox{NPDE-FDM}\hbox{陈曦，HOME}\hbox{Summer, 2024}}
+
+\begin{center}\Large
+    \textbf{微分方程数值解——有限差分法}\\{\normalsize\bf {色散性和耗散性}}
+\end{center}
+\vskip 30pt
+\small {参考书目：
+\begin{itemize}
+    \item Numerical Partial Differential Equations: Finite Difference Methods （J. W. Thomas，1995）
+    \item Time Dependent Problems and Difference Methods（B. Gustafsson，1995）
+    \item Finite Difference Methods for Ordinary and Partial Differential Equations（Randall J.LeVeque，2007）
+    \item 偏微分方程的有限差分方法（张强，2017）
+\end{itemize}}
+波方程与扩散方程的解具有明显的区别，这主要表现在两点上：
+\begin{itemize}
+    \item 随着时间推进，扩散方程的解的最大模逐渐减小，各部分的差距逐渐缩小，最终趋于平稳（扩散方程的解可以写成卷积形式）；而波方程的解的最大模保持不变，各部分的差距保持不变，解的形状相比初值状态不发生变化。
+    \item 波方程的解可以视作不同单波的组合，而扩散方程相应的单波解缺乏相应的物理意义。
+\end{itemize}
+由于这两点区别的存在，使得双曲方程的差分格式设计要比抛物方程考虑更多的要求：为了刻画第一点特性，即解的形状不发生变化，需要保证差分格式和问题具有相同的耗散性，同时希望可以尽可能好地刻画间断点处的变化情况并避免出现数值振荡；另一方面，由于第二点的存在，我们希望差分格式给出的数值波具有和相应的真实单波具有相近的波速、波形以及相位，还要保持不同单波之间的相对速度和相对位置不发生变化，这需要差分格式具有与原方程相同的色散性。
+
+本文主要考虑一维常系数对流方程$ u_t+au_x=0 $的差分格式，讨论其单调性、耗散性和色散性，以及如何设计差分格式使得其具有良好的耗散性和色散性。
+这里处理的差分格式主要为线性显式常系数差分格式，一般可以表示为
+\begin{equation}\label{eq:explict}
+    u^{(n+1)}_j = \sum_{s=-l}^r \alpha_s u^{(n)}_{j+s},
+\end{equation}
+其中$ \alpha_s $是给定的差分系数。对于一维对流方程$ u_t+au_t=0 $而言，直接做Taylor展开可知该格式与原方程相容当且仅当
+\begin{equation}
+    \sum_{s=-l}^r \alpha_s = 1, \quad \sum_{s=-l}^r \alpha_s s = -a \frac{\Delta t}{\Delta x},
+\end{equation}
+并且当$ a<0 $时，该格式具有$ L^2 $稳定性时可以到达的截断误差最高阶数为
+\begin{equation}
+    p = \min(l+r,2l+2,2r),
+\end{equation}
+并且相应的$ r $只能为$ l,l+1 $或者$ l+2 $三种情况之一。
+
+\section{单调性}
+为了避免出现数值振荡，差分格式的单调性十分重要。所谓的单调性是指如果某一格点$ u^{(n)}_j\geqslant u^{(n)}_{j-1} $，则下一个时间层内有
+\[
+    u^{(n+1)}_j\geqslant u^{(n+1)}_{j-1}.
+\]
+显然，单调性是使得数值解形状不发生变化的必要条件，而对流方程的解$ f(x-at) $与初值$ f(x) $仅仅相差一个平移，因此具有单调保持性质，自然地我们希望它的数值解也满足单调性。通过考虑单调增加的初值函数
+\[
+    f_j = u^{(0)}_j = 
+    \begin{cases}
+        0, &j\leqslant \ell\\
+        1, &j>\ell
+    \end{cases},
+\]
+带入差分格式\eqref{eq:explict}中可得
+\[
+    u^{(1)}_1 - u^{(1)}_0 = \sum_{s=-l}^r \alpha_s [u^{(0)}_{1+s} - u^{(0)}_s] = \alpha_\ell,
+\]
+于是当$ \alpha_\ell\geqslant 0 $，则递推可知$ u^{(n)}_1 - u^{(n)}_0\geqslant 0 $，而当$ \alpha_\ell<0 $时，$ u^{(n)}_1 - u^{(n)}_0 $是正负交替振荡的，因此我们得到了差分格式单调性的等价定义。
+\begin{definition}
+    差分格式\eqref{eq:explict}是单调的，当且仅当所有的差分系数$ \alpha_\ell\geqslant 0 $，因此单调格式也被称作正格式。
+\end{definition}
+差分格式可以保持数值解的单调性，进而使得数值解不出现数值振荡，不过单调格式在相容性上有很大的局限性，即Godunov定理。
+\begin{theorem}{\normalfont\bf{Godunov}}
+    如果差分格式是单调的，则它至多具有一阶局部截断误差。
+\end{theorem}
+这一事实意味着高阶相容的线性格式不可能是单调的，因此难以避免数值振荡，为了解决这一问题，我们需要寻找不具有单调性却又能避免数值振荡的差分格式。
+
+\section{耗散性与色散性}
+现在开始考虑差分格式的耗散性和色散性。如之前所述，希望差分格式具有和原方程相同的耗散性和色散性，以便更好地刻画原方程的解，为此首先需要研究原方程的耗散性和色散性，之后再讨论差分格式的耗散性和色散性。
+
+\subsection{方程的耗散性和色散性}
+给定某一类型的微分方程，考虑它如下形式的简谐波解
+\begin{equation}
+    \textcolor{blue}{u(x,t) = \hat{u}(\omega,k) e^{i(\omega t + kx)}},
+\end{equation}
+其中$ \omega $是该谐波的\emph{频率}，$ k $是该谐波的\emph{波数}，$ \lambda = 2\pi / k $为\emph{波长}。将谐波解代入原方程，可以得到
+\begin{equation}
+    \textcolor{red}{\omega = \omega(k)},
+\end{equation}
+该关系称为方程的\emph{色散关系}或\emph{频散关系}（更准确的讲应该是色散-耗散关系，因为该关系中也包含了方程的耗散信息），称$ c = -\omega / k $为该波的\emph{波速}，当$ c>0 $时，该简谐波从左到右传播，当$ c<0 $时，该简谐波从右到左传播。当考虑多个单波组成的波包时，该波包的整体波形，即包络线，也是一个波函数，如果考虑一个由波数$ k $附近的单波组成的波包，称
+\begin{equation}
+    C_k = -\frac{d \omega(k)}{dk}
+\end{equation}
+为该波包的\emph{群速度}，它表征波包的传播速度，在常规介质内，波包的群速度小于其含有的单波的波速。
+
+现在我们将$ \omega $的实部和虚部分离，即$ \omega = \omega_r +i\omega_i $，此时谐波解为
+\[
+    u(x,t) = \hat{u} e^{i(\omega_r t - \omega_i t + kx)} = \hat{u} e^{\textcolor{red}{-\omega_i} t} e^{i(\textcolor{red}{\omega_r} t + kx)},
+\]
+因此虚部$ \omega_i $控制了谐波解的衰减速度，因此决定了方程的耗散性，而实部$ \omega_r=\omega_r(k) $控制了相应波数的谐波解波速，不同波数的谐波解波速间的关系决定了方程的色散性：
+\begin{enumerate}
+    \item \textbf{耗散性}：
+    \begin{itemize}
+        \item 如果存在$ k $使得$ \omega_i(k)>0 $，则谐波解衰减，即方程具有耗散性；
+        \item 如果对所有的波数$ k $都有$ \omega_i(k)=0 $，则谐波解不衰减，即方程不具有耗散性。
+        \item 如果存在$ k $使得$ \omega_i(k)<0 $，则谐波解增长，即方程具有反耗散性。
+    \end{itemize}
+    \item \textbf{色散性}：
+    \begin{itemize}
+        \item 如果对所有的波数$ k $而言，$ \omega_r(k) $都是系数保持不变的线性关系，即$ \omega_r(k) = ck $，则方程各波数的单波具有相同的波速，整体波形保持不变，因此不具有色散性；
+        \item 如果存在$ k $使得$ \omega_r(k) $是非线性关系，或$ c_k=-\omega_r(k) / k $与$ k $有关，则方程具有色散性。
+    \end{itemize}
+\end{enumerate}
+
+\begin{example}
+    考虑一维对流方程$ u_t+au_x=0 $，令$ u(x,t) = \hat{u} e^{i(\omega t + kx)} $，代入原方程可得
+    \[
+        i\omega \hat{u} + iak\hat{u} = 0 \implies \omega = -ak,
+    \]
+    从而得到色散关系$ \omega = -ak $，波速为$ c=a $。对于热方程$ u_t = \kappa u_{xx} $，代入原方程可得
+    \[
+        i\omega \hat{u} = -\kappa k^2 \hat{u} \implies \omega = i\kappa k^2,
+    \]
+    因此色散关系变为$ \omega = i\kappa k^2 $。根据色散关系，可以看出两类方程解的性质有很大的不同：对流方程既不耗散也不色散，因此解的形状保持不变；而热方程同时具有耗散性和色散性。
+\end{example}
+
+\subsection{数值耗散和数值色散}
+与之前类似，我们考虑差分格式的简谐波解
+\begin{equation}
+    u^{(n)}_j = \hat{u} e^{i(\omega \Delta t n + k\Delta x j)},
+\end{equation}
+将其代入差分格式中可得
+\[
+    \omega = \omega(k),
+\]
+该关系称作差分格式的\emph{离散色散关系}，与上一小节类似，令$ \omega = \omega_r + i\omega_i $，则差分格式的简谐波解变为
+\[
+    u^{(n)}_j = \hat{u} e^{-\omega_i \Delta t n} e^{i(\omega_r \Delta t n + k\Delta x j)},
+\]
+其中$ \omega_i $和$ \omega_r $仍然分别决定了差分格式的耗散性和色散性：
+\begin{enumerate}
+    \item \textbf{数值耗散性}：
+    \begin{itemize}
+        \item 如果存在$ k $使得$ \omega_i(k)>0 $，则差分格式具有数值耗散性；
+        \item 如果对所有的波数$ k $都有$ \omega_i(k)=0 $，则差分格式不具有数值耗散性。
+        \item 如果存在$ k $使得$ \omega_i(k)<0 $，则差分格式具有反数值耗散性。
+    \end{itemize}
+    \item \textbf{数值色散性}：
+    \begin{itemize}
+        \item 如果对所有的波数$ k $而言，$ \omega_r(k) $都是系数保持不变的线性关系，即$ \omega_r(k) = ck $，则差分格式不具有数值色散性；
+        \item 如果存在$ k $使得$ \omega_r(k) $是非线性关系，或$ c_k=-\omega_r(k) / k $与$ k $有关，则差分格式具有数值色散性。
+    \end{itemize}
+\end{enumerate}
+
+事实上我们可以利用稳定性分析得到的增长因子来刻画差分格式的耗散性和色散性，这是因为谐波解可以表示为
+\[
+    u^{(n)}_j = \hat{u} e^{i(\omega \Delta t n + k\Delta x j)} =  \rho^n(k) \hat{u} e^{ikx_j},
+\]
+其中$ \rho(k) = e^{i \omega(k)\Delta t} $就是差分格式的增长因子，我们有
+\[
+    |\rho(k)| = e^{-\omega_i(k)\Delta t}, \quad \arg \rho(k) = \omega_r(k)\Delta t,
+\]
+因此增长因子的模表示$ \Delta t $之后数值解的振幅衰减情况，而增长因子的幅角表示$ \Delta t $之后数值解的相位变化情况，并且
+\begin{equation}
+    \textcolor{red}{\omega_i = -\frac{1}{\Delta t} \ln |\rho|}, \quad \textcolor{red}{\omega_r = \frac{1}{\Delta t} \arg \rho},
+\end{equation}
+于是差分格式的增长因子可以给出该格式的耗散性和色散性。
+
+\begin{example}
+    考虑$ [-\pi,\pi] $上的扩散方程$ u_t = \kappa u_x $的FTCS格式
+    \[
+        u^{(n+1)}_j = u^{(n)}_j + \frac{\kappa\Delta t}{\Delta x^2} (u^{(n)}_{j+1} - 2u^{(n)}_j + u^{(n)}_{j-1}),
+    \]
+    代入简谐波解$ u^{(n)}_j = \hat{u}^{(n)} e^{ikx_j} $进行Fourier稳定性分析可得增长因子为
+    \[
+        \rho(k) = 1 + \frac{\kappa\Delta t}{\Delta x^2} (e^{ik\Delta x} - 2 + e^{-ik\Delta x}) = 1 - 4\frac{\kappa\Delta t}{\Delta x^2} \sin^2(\frac{k\Delta x}{2}),
+    \]
+    其中$ k = 0,1,\cdots ,N $，$ \Delta x = 2\pi / N $，从而得到增长因子的模和幅角分别为
+    \[
+        |\rho(k)| = |1 - 4\frac{\kappa\Delta t}{\Delta x^2} \sin^2(\frac{k\Delta x}{2})|, \quad \arg \rho(k) = 0,
+    \]
+    因此该差分格式不具有数值色散性，当满足von Neumann条件$ \kappa \Delta t / \Delta x^2\leqslant 1 $时，该差分格式具有数值耗散性。
+\end{example}
+
+一般地，数值色散是数值振荡的根本原因，数值耗散同数值色散的平衡关系决定了数值振荡的具体表现。对于某些问题而言，例如扩散方程，数值耗散是必要的，因此一些格式会人为地引入数值耗散，而另一方面则希望尽可能地避免数值色散，特别当解函数具有尖锐的间断时，数值色散会导致数值解的剧烈振荡。最后，对于多层格式，相应的数值解中一个波数可能对应多个单波，因此数值耗散性和色散性有更复杂的关系，这方面的一个例子可以参见NPDE-FDM 7.8节中对蛙跳法的分析。
+
+\end{document}
