@@ -1,0 +1,1022 @@
+\documentclass[a4paper,10pt]{ctexart}
+\input{macros}
+\usepackage{booktabs}
+
+\begin{document}
+\hfill\vbox{\hbox{NPDE-FEM}\hbox{陈曦，HOME}\hbox{Summer, 2024}}
+
+\begin{center}\Large
+    \textbf{微分方程数值解——有限元方法}\\{\normalsize\bf {Sobolev Space}}
+\end{center}
+\vskip 30pt
+\small {参考书目：
+\begin{itemize}
+    \item Partial Differential Equations （Lawrence C. Evans，1997）
+    \item Lecture Notes on Finite Element Methods for Partial Differential Equations（Endre Süli，2019）
+    \item The Mathemactial Theory of Finite Element Methods（Brenner，2008）
+    \item Numerical Solution of Partial Differential Equations by the Finite Element Method（Johnson，1987）
+    \item Numerical Solution of Partial Differential Equations, Introduction to Finite Difference and Finite Element Methods（Zhilin Li，2018）
+\end{itemize}}
+
+一般地，偏微分方程可以写为
+\[
+    \mathcal{L}u = f,
+\]
+其中$ \mathcal{L} $某个线性微分算子，为了讨论解的存在性和唯一性，首先我们需要明确$ \mathcal{L} $的像空间和原像空间。如果选取的空间不够好，要么解的存在唯一性难以保证，要么就需要非常困难的分析才可能研究解的性质；另一方面，注意到即使是一些非常简单的偏微分问题初值问题，当给定的初值函数不具有足够的光滑性时，使用经典解析方法，如Fourier变换或者分离变量法，得到的解即使具有实际物理意义也不一定具有足够好的光滑性以至于不能在经典意义下满足原方程，所以我们同时需要推广导数的概念使得这些解在新的定义下仍然是合理的。基于这些考虑，数学家发现把Sobolev空间作为微分算子的像空间和原像空间是相当合适的选择：首先，在Sobolev空间内我们可以定义弱解以提高了问题的可解性（在$ L_p $空间内，一些函数无法定义合适的弱导数）；其次，Sobolev空间是Banach空间，因此可以借助泛函分析中众多强大的工具来研究解的性质（Lax-Milgram定理）；最后，Sobolev是完备的，这让弱解的存在性通常相对容易证明（不过证明解具有足够的光滑性往往要困难得多）。
+
+\section{Hölder空间}
+Hölder空间是Sobolev空间的基础，它的要求要比Sobolev空间稍低。考虑$ \mathbb{R}^n $空间中的开集$ U $，给定任意$ 0<\gamma\leqslant 1 $，如果函数$ u:U\to\mathbb{R} $满足
+\begin{equation}
+    |u(x) - u(y)| \leqslant C|x-y|^{\textcolor{blue}{\gamma}},\quad \forall x,y\in U,
+\end{equation}
+其中$ C $是某常数，则称$ u $是以$ \gamma $为指数的Hölder连续函数。当$ \gamma = 1 $时，Hölder连续函数就是Lipschitz连续函数。Hölder连续强于连续性，但弱于可微性。
+
+\begin{definition}
+    如果$ u:U\to\mathbb{R} $是有界连续函数，定义
+    \begin{equation}
+        \| u \|_{C(\overline{U})} := \sup_{x\in U} |u(x)|.
+    \end{equation}
+    对一般标量函数$ u:U\to \mathbb{R} $定义其\textcolor{blue}{$ \gamma $-Hölder半范数}为
+    \begin{equation}
+        [u]_{C^{0,\gamma}(U)} := \sup_{x\neq y} \dfrac{|u(x) - u(y)|}{|x-y|^{\gamma}}.
+    \end{equation}
+    定义$ u $的\textcolor{blue}{$ \gamma $-Hölder范数}为
+    \begin{equation}
+        \| u \|_{C^{0,\gamma}(U)} := \| u \|_{C(\overline{U})} + [u]_{C^{0,\gamma}(U)}.
+    \end{equation}
+\end{definition}
+其中$ [u]_{C^{0,\gamma}(U)} $只是半范数(seminorm)，该定义不满足范数的第一条要求，即当$ [u]_{C^{0,\gamma}(U)} = 0 $，我们只能得到$ u $是某一常数，但却不能保证$ u $是零函数。如果给定某赋范线性空间$ X $上的半范数$ [ \cdot ] $，可以定义相应的商空间$ X / {\rm Ker}[\cdot] $上的一个范数
+\[
+    \| \hat{x} \|_0 = \inf_{x\in \hat{x}} [x].
+\]
+
+\begin{definition}
+    $ \mathbb{R}^n $内开集$ U $上的\textcolor{blue}{$ k $阶光滑$ \gamma $-Hölder空间}定义为
+    \begin{equation}
+        C^{k,\gamma}(\overline{U}) := \{ u\in C^k(\overline{U}) \mid \| u \|_{C^{k,\gamma}(\overline{U})} < \infty \},
+    \end{equation}
+    其中
+    \begin{equation}
+        \| u \|_{C^{k,\gamma}(\overline{U})} := \sum_{|\alpha|\leqslant k} \| D^\alpha u \|_{C(\overline{U})} + \sum_{|\alpha| = k} [D^\alpha u]_{C^{0,\gamma}(\overline{U})}.
+    \end{equation}
+\end{definition}
+\noindent 因此，$ C^{k,\gamma}(\overline{U}) $是$ C^k(\overline{U}) $的子空间，要求其中的函数的$ k $阶导数是有界并且$ \gamma $-Hölder连续的。通过验证$ C^{k,\gamma}(\overline{U}) $内每个Cauchy列都收敛，可以证明$ C^{k,\gamma}(\overline{U}) $是完备的，从而是Banach空间。
+
+\begin{theorem}
+    $ C^{k,\gamma}(\overline{U}) $是Banach空间。
+\end{theorem}
+
+\section{Sobolev空间}
+如果我们在Hölder空间中寻找问题$ \mathcal{L}u=f $的解，则哪怕存在解，也只能保证该解函数具有某阶光滑性，无法保证解的经典导数存在，从而该解不一定是古典解，为了真正解决这个问题，本节介绍Sobolev空间并在其上定义弱导数和微分方程的弱解。
+
+\subsection{弱导数}
+弱导数的想法借助了测试函数，通俗地来讲，如果某个函数在整个空间内每个元素（测试函数）看来都满足\emph{导子性质}（即分部积分关系），就称该函数是弱可微的。这也是一个使用已有定义的性质反过来得到更一般的概念的例子。
+
+称$ \phi\in C^\infty_c(U) $是$ U $上的测试函数，其中下标$ c $表明该函数具有紧支集。考虑$ u\in C^1(U) $，如果$ u $的各个方向上的偏导数存在，则使用分部积分公式并注意到$ \phi (\partial U)=0 $可得
+\[
+    \int_U \dfrac{\partial u}{\partial x_i}  \phi \ d x = -\int_U \dfrac{\partial \phi}{\partial x_i}u \ d x.  
+\]
+使用多重指标$ \alpha = (\alpha_1,\cdots ,\alpha_n) $可以将上式写为一般形式
+\begin{equation}
+    \int_U D^\alpha u \phi \ d x = (-1)^{|\alpha|} \int_U u D^\alpha \phi \ d x.
+\end{equation}
+反过来，如果$ u $不具有经典意义下的偏导数，但却存在$ v $使得
+\begin{equation}
+    \int_U u D^\alpha\phi \ d x = (-1)^{|\alpha|} \int_U v \phi \ d x,\quad \forall \phi\in C^\infty_c(U),
+\end{equation}
+那么自然地称$ v $是$ u $的$ \alpha $阶弱导数（因为满足导数的导子性质）。更一般的，注意到上式中没有使用到$ u $的连续性，所以$ u $的正则性事实上可以放宽为局部可积$ u\in L_{\rm loc}^1(U) $\footnote{$ u\in L_{\rm loc}^1(U) $即$ u\in L^1(V) $对任意满足$ \overline{V}\subset U $的有界开集$ V $成立}。我们将这一定义以如下方式严格化。
+
+\begin{definition}
+    给定$ u,v\in L_{\rm loc}^1(U) $，$ \alpha $是多重指标。如果对于任意测试函数$ \phi\in C^\infty_c(U) $，有
+    \begin{equation}
+        \int_U u D^\alpha \phi \ d x = (-1)^{|\alpha|} \int_U v \phi \ d x,
+    \end{equation}
+    则称$ v $是$ u $的\textcolor{blue}{$ \alpha $阶弱导数}，记作$ D^\alpha u = v $。
+\end{definition}
+\noindent 函数可能没有弱导数，但是如果存在弱导数，那么同一函数的弱导数在只相差一个零测集的意义下是唯一的。
+
+\subsection{Sobolev空间的定义}
+现在使用弱导数的概念来定义Sobolev空间。
+\begin{definition}
+    给定$ U\subset \mathbb{R}^n $是开集，$ 1\leqslant p < \infty $，$ k\in \mathbb{N} $，定义$ U $上的\textcolor{blue}{Sobolev空间}为
+    \begin{equation}
+        W^{k,p}(U) := \{ u\in L^p(U) \mid D^\alpha u\in L^p(U),\ \forall |\alpha|\leqslant k \},
+    \end{equation}
+    其中$ D^\alpha u $是$ u $的$ \alpha $阶弱导数。定义$ W^{k,p}_0(U) $为$ W^{k,p}(U) $中的光滑紧支撑函数空间$ C^\infty_c(U) $的闭包。
+\end{definition}
+\noindent 当$ p=2 $时，$ W^{k,2}(U) $可以通过定义合适的内积成为Hilbert空间，因此往往记作$ H^k(U) $，特别地$ H^0(U) = L^2(U) $。相应地，记$ H^k_{0}(U) $为$ H^k(U) $中的光滑紧支撑函数空间$ C^\infty_c(U) $的闭包。当$ p\ne 2 $时，$ W^{k,p}(U) $只能成为Banach空间，为此我们需要定义其范数。
+\begin{definition}
+    对于$ u\in W^{k,p}(U) $，定义其\textcolor{blue}{Sobolev范数}为
+    \begin{equation}
+        \| u \|_{W^{k,p}(U)} := 
+        \begin{cases}
+            \left( \sum_{|\alpha|\leqslant k} \| D^\alpha u \|_{L^p(U)}^p \right)^{1/p} & 1\leqslant p<\infty,\\
+            \sum_{|\alpha|\leqslant k} \| D^\alpha u \|_{L^\infty(U)} & p=\infty.
+        \end{cases}
+    \end{equation}
+    其中$ \| v \|_{L^\infty(U)} = {\rm ess\ sup}_{x\in U} |v(x)| $是$ v $的本质上确界。
+\end{definition}
+\noindent 在$ W^{k,p}(U) $内，如果$ \{u_m\}\subset W^{k,p}(U) $满足
+\begin{equation}
+    \lim_{m\to\infty} \| u_m - u \|_{W^{k,p}(U)} = 0,
+\end{equation}
+则称$ u_m $在$ W^{k,p}(U) $内逐点收敛到$ u $，记为$ u_m\to u $。如果任意$ V\subset\subset U $(即$ V\subset \overline{V}\subset U $)内都有$ u_m\to u $，则称$ u_m $在$ W^{k,p}_{\rm loc}(U) $内逐点收敛到$ u $。
+
+在$ H^k(U) = W^{k,2}(U) $内定义内积为
+\begin{equation}
+    (u,v)_{H^k(U)} = \sum_{|\alpha|\leqslant k} (D^\alpha u, D^\alpha v)_{L^2(U)},
+\end{equation}
+可以证明$ H^k(U) $在该内积下构成内积空间且完备，因此是Hilbert空间。最重要也最常用的两个$ H^k $空间是$ H^1 $和$ H^2 $，相应的定义和范数分别为：
+\begin{equation}
+    \begin{aligned}
+        H^1(U) &= W^{1,2}(U) = \left\{ u\in L^2(U) \mid \dfrac{\partial u}{\partial x_i} \in L^2(U),i = 1,2,\cdots ,n \right\} \\
+        \| u \|_{H^1(U)} &= \left( \| u \|_{L^2(U)}^2 + \sum_{i=1}^n \| \dfrac{\partial u}{\partial x_i} \|_{L^2(U)}^2 \right)^{1/2},
+    \end{aligned}
+\end{equation}
+以及
+\begin{equation}
+    \begin{aligned}
+        H^2(U) &= W^{2,2}(U) = \left\{ u\in L^2(U) \mid \dfrac{\partial u}{\partial x_\ell}, \dfrac{\partial^2 u}{\partial x_i\partial x_j} \in L^2(U),\ell,i,j = 1,2,\cdots ,n \right\} \\
+        \| u \|_{H^2(U)} &= \left( \| u \|_{L^2(U)}^2 + \sum_{\ell=1}^n \| \dfrac{\partial u}{\partial x_\ell} \|^2_{L^2(U)}  + \sum_{i,j=1}^n \| \dfrac{\partial^2 u}{\partial x_i\partial x_j} \|_{L^2(U)}^2 \right)^{1/2}.
+    \end{aligned}
+\end{equation}
+
+\subsection{一些性质}
+一般而言，Sobolev空间中的函数可能是不连续或者是无界的，因此无法对光滑性做出直接的判断，必须依赖于弱导数的概念进行单独的分析。下面我们给出Sobolev空间的一些性质。
+\begin{proposition}
+    $ u,v\in W^{k,p}(U) $，$ \alpha,\beta $是多重指标满足$ |\alpha|\leqslant k $，则
+    \begin{enumerate}
+        \item 当$ |\alpha|+|\beta|\leqslant k $，$ D^\alpha u\in W^{k-|\alpha|,p}(U) $，$ D^\beta(D^\alpha u) = D^\alpha(D^\beta u)= D^{\alpha+\beta}u $；
+        \item 线性性：$ u+v\in W^{k,p}(U) $，$ \lambda u\in W^{k,p}(U) $，且$ D^\alpha(\lambda u+\mu v) = \lambda D^\alpha u + \mu D^\alpha v $；
+        \item 如果$ V $是$ U $的开子集，则$ u\in W^{k,p}(V) $；
+        \item Leibniz法则：
+        \[
+            D^\alpha(uv) = \sum_{\beta \leqslant \alpha} \binom{\alpha}{\beta} D^\beta u D^{\alpha-\beta} v, \quad \binom{\alpha}{\beta} = \dfrac{\alpha!}{\beta!(\alpha-\beta)!}.
+        \]
+    \end{enumerate}
+\end{proposition}
+如之前所述，配备了Sobolev范数之后的$ W^{k,p}(U) $是完备的，于是有如下定理。
+\begin{theorem}
+    $ W^{k,p}(U) $是Banach空间。
+\end{theorem}
+
+\section{Sobolev空间中的逼近}
+本节延续经典的分析理论中的传统，首先考虑使用光滑函数在区域的内点逼近Sobolev空间中的函数，接着尝试在整个空间上进行逼近，最后在光滑函数空间内做逼近。与连续空间类似，光滑函数在Sobolev空间中是稠密的。
+\subsection{光滑函数在内点处的逼近}
+现在令$ U_\epsilon = \left( x\in U |\ {\rm dist}(x,\partial U)>\epsilon \right) $为$ U $内距离$ \partial U $至少$ \epsilon $的开集，令
+\begin{equation}
+    \eta(x) = \begin{cases}
+        C \exp \left( \frac{1}{|x|^2-1} \right) & |x|<1,\\
+        0 & |x|\geqslant 1,
+    \end{cases}
+\end{equation}
+令$ C $为使得$ \int_{\mathbb{R}^n}\eta=1 $的常数，可以证明$ \eta\in C^\infty(\mathbb{R}^n) $。对于任意$ \epsilon>0 $，定义
+\begin{equation}
+    \eta_\epsilon(x) = \dfrac{1}{\epsilon^n} \eta\left( \dfrac{x}{\epsilon} \right),
+\end{equation}
+称$ \eta_\epsilon $为\emph{标准柔化函数}，该函数满足归一性$ \int_{\mathbb{R}^n} \eta_\epsilon = 1 $。当$ f\in L_{\rm loc}^1(U) $时，定义在$ U_\epsilon $上的$ f^\epsilon := f * \eta_\epsilon $称为$ f $的一个\emph{柔化}，并且有如下性质:
+\begin{enumerate}
+    \item $ f^\epsilon\in C^\infty(U_\epsilon) $；
+    \item $ f^\epsilon\to f $在$ L^p(U) $内几乎处处逐点收敛；
+    \item 如果$ f\in C(U) $，则在$ U $的任意紧子集上$ f^\epsilon\to f $是一致收敛的；
+    \item 如果$ 1\leqslant p<\infty $，$ f\in L_{\rm loc}^p(U) $，则$ f^\epsilon\to f $在$ L^p_{\rm loc}(U) $内逐点收敛。
+\end{enumerate}
+我们有如下逼近定理。
+\begin{theorem}
+    设$ U\subset \mathbb{R}^n $是开集，$ 1\leqslant p \textcolor{red}{<} \infty $，令
+    \[
+        u^\epsilon = \eta_\epsilon * u \quad \text{ in } U_\epsilon,
+    \]
+    于是
+    \begin{enumerate}
+        \item $ \epsilon>0 $时$ u^\epsilon\in C^\infty(U_\epsilon) $；
+        \item $ \epsilon\to 0 $时$ u^\epsilon\to u $在$ W^{k,p}_{\rm loc}(U) $内逐点收敛；
+    \end{enumerate}
+\end{theorem}
+
+\subsection{光滑函数在Sobolev空间上的逼近}
+实际上，我们可以直接在$ W^{k,p}(U) $而非$ W^{k,p}_{\rm loc} $上进行逼近。
+\begin{theorem}
+    设$ U\subset \mathbb{R}^n $是有界开集，$ 1\leqslant p \textcolor{red}{<} \infty $，$ u\in W^{k,p}(U) $，则存在$ \{ u_m \}\subset C^\infty(U)\cap W^{k,p}(U) $使得
+    \begin{equation}
+        u_m\to u \quad \text{ in } W^{k,p}(U).
+    \end{equation}
+\end{theorem}
+\noindent 该定理不要求$ u_m\in C^\infty (\overline{U}) $。
+
+\subsection{光滑函数空间内的逼近}
+最后，对于$ u\in W^{k,p}(U) $，我们可以进一步增强逼近函数列$ u_m $的光滑性要求，可以要求$ u_m\in C^\infty(\overline{U}) $而不仅仅是$ u_m\in C^\infty(U) $。
+\begin{theorem}
+    设$ U\subset \mathbb{R}^n $是有界开集，并且$ \partial U $是$ C^1 $的，$ 1\leqslant p < \infty $，$ u\in W^{k,p}(U) $，则存在$ \{ u_m \}\subset C^\infty(\overline{U}) $使得
+    \begin{equation}
+        u_m\to u \quad \text{ in } W^{k,p}(U).
+    \end{equation}
+\end{theorem}
+\noindent 该定理为了对逼近函数列做出进一步限制，需要要求区域边界$ \partial U $是$ C^1 $的。
+
+\section{延拓定理}
+这一节的主要结果是将$ W^{k,p}(U) $中的元素嵌入到更大的$ W^{k,p}(\mathbb{R}^n) $内，即把定义在有界区域上的函数延拓到整个空间上。
+\begin{theorem}
+    设$ U\subset \mathbb{R}^n $是有界开集并且$ \partial U $是$ C^1 $的，$ 1\leqslant p \textcolor{red}{\leqslant } \infty $，$ k\in \mathbb{N} $，给定任意满足$ U\subset\subset V $的有界开集$ V $，则存在有界线性算子$ E $
+    \begin{equation}
+        E: W^{1,p}(U) \to W^{1,p}(\mathbb{R}^n)
+    \end{equation}
+    使得任意$ u\in W^{1,p}(U) $满足
+    \begin{enumerate}
+        \item $ Eu = u $在$ U $上几乎处处成立；
+        \item $ {\rm supp}\ Eu \subset V $；
+        \item 存在只与$ p,U,V $有关的常数$ C $使得
+        \begin{equation}
+            \| Eu \|_{W^{1,p}(\mathbb{R}^n)} \leqslant C \| u \|_{W^{1,p}(U)}.
+        \end{equation}
+    \end{enumerate}
+\end{theorem}
+\noindent 称$ Eu $为$ u $的在$ \mathbb{R}^n $上的一个\emph{延拓}。
+
+当区域边界$ \partial U $是$ C^2 $时，延拓算子$ E $可以构造为从$ W^{2,p}(U) $到$ W^{2,p}(\mathbb{R}^n) $的有界线性算子，并且可以满足$ \| Eu \|_{W^{2,p}(\mathbb{R}^n)} \leqslant C \| u \|_{W^{2,p}(U)} $的估计。但是对于$ k > 2 $的情况，$ k=1,2 $的证明无法直接推广，相应的结论需要更高阶的分析工具。
+
+\section{迹定理}
+因为对于$ u\in W^{k,p}(U) $，我们只能说$ u $在$ U $上几乎处处有定义，而在零测集$ \partial U $上的情况是不明确的，所以无法直接将$ u $限制在$ \partial U $上，但是为了保证边界条件得到满足，又必须对边界处的函数值进行限制。迹定理就是解决这一问题的工具。本节要求$ 1\leqslant p<\infty $。
+\begin{theorem}
+    设$ U\subset \mathbb{R}^n $是有界开集并且$ \partial U $是$ C^1 $的，则存在有界线性算子$ T $
+    \begin{equation}
+        T: W^{1,p}(U) \to L^p(\partial U)
+    \end{equation}
+    使得对任意$ u\in W^{1,p}(U) \cap C(\overline{U}) $，都有
+    \begin{equation}
+        Tu = u|_{\partial U},
+    \end{equation}
+    并且
+    \begin{equation}
+        \| Tu \|_{L^p(\partial U)} \leqslant C \| u \|_{W^{1,p}(U)}.
+    \end{equation}
+\end{theorem}
+\noindent 称$ Tu $是$ u $在$ \partial U $上的\emph{迹}。
+
+显然，最简单的零边界条件应当对应迹零函数，关于$ W^{1,p}(U) $中的迹零函数有如下定理。
+\begin{theorem}
+    设$ U\subset \mathbb{R}^n $是有界开集并且$ \partial U $是$ C^1 $的，则$ u\in W^{1,p}(U) $是迹零函数当且仅当$ u\in W^{1,p}_0(U) $，即
+    \begin{equation}
+        u\in W^{1,p}_0(U) \iff Tu = 0 \text{ on } \partial U.
+    \end{equation}
+\end{theorem}
+
+\section{Sobolev不等式}
+首先，当$ 1\leqslant p< n $时，定义$ p $的Sobolev共轭指数为
+\begin{equation}
+    p^* = \dfrac{np}{n-p}.
+\end{equation}
+于是
+\[
+    \frac{1}{n} = \frac{1}{p} - \frac{1}{p^*}.
+\]
+现在我们可以给出如下不等关系。
+\begin{theorem}{\normalfont\textbf{(Gagliardo-Nirenberg-Sobolev不等式)}}
+    当$ 1\leqslant p < n $时，存在只与$ n,p $有关的常数$ C $使得对任意$ u\in C^{\infty}_c(\mathbb{R}^n) $，使得
+    \begin{equation}
+        \| u \|_{L^{p^*}(\mathbb{R}^n)} \leqslant C \| D u \|_{L^p(\mathbb{R}^n)}.
+    \end{equation}
+\end{theorem}
+对于Sobolev空间$ W^{1,p}(U) $内的函数，我们可以先将这些函数延拓到$ W^{1,p}(\mathbb{R}^n) $上，对于$ W^{1,p}(\mathbb{R}^n) $内的函数我们有如下类似的结论。
+\begin{theorem}
+    设$ U $为有界开集，并且$ \partial U $是$ C^1 $的。当$ 1\leqslant p < n $时，任意$ u\in W^{1,p}(U) $都有$ u\in L^{P^*}(U) $，即$ W^{1,p}(U)\subset L^{p^*}(U) $，并且存在只与$ n,p $和$ U $有关的常数$ C $使得
+    \begin{equation}
+        \| u \|_{L^{p^*}(U)} \leqslant C \| u \|_{W^{1,p}(U)}.
+    \end{equation}
+    于是$ W^{1,p}(U) $可以嵌入到$ L^{p^*}(U) $中。
+\end{theorem}
+关于迹零函数，我们有更强的结论。
+\begin{theorem}{\normalfont\textbf{(Poincaré不等式)}}
+    设$ U $为有界开集，并且$ \partial U $是$ C^1 $的。当$ 1\leqslant p < n $时，存在只与$ n,p $和$ U $有关的常数$ C $使得对于任意$ u\in W^{1,p}_0(U) $都有
+    \begin{equation}
+        \| u \|_{L^{q}(U)} \leqslant C \| D u \|_{L^p(U)},\quad \forall q\in [1,p^*].
+    \end{equation}
+    并且对于任意$ 1\leqslant p\leqslant \infty $都有
+    \begin{equation}
+        \| u \|_{L^{p}(U)} \leqslant C \| D u \|_{L^p(U)}.
+    \end{equation}
+\end{theorem}
+
+事实上，Poincaré不等式有如下更一般的形式。
+\begin{theorem}
+    设$ U $为有界连通开集，并且$ \partial U $是$ C^1 $的。当$ 1\leqslant p \leqslant \infty $时，存在只与$ n,p $和$ U $有关的常数$ C $使得任意$ u\in W^{1,p}(U) $都有
+    \begin{equation}
+        \| u - u_{\rm av} \|_{L^{p}(U)} \leqslant C \| D u \|_{L^p(U)},
+    \end{equation}
+    其中$ u_{\rm av} =  \int_U u \ d x / m(U) $是$ u $在$ U $上的平均值。
+\end{theorem}
+
+当$ p=n $时，$ p^* $为无穷，这种情况相对难处理，这里我们只证明最简单的一种情况：$ n = p =2 $，$ U = [a,b]\times [c,d] $是矩形区域，注意到$ u\in W^{1,2}_0(U) $时它的迹为零，使用微积分基本定理可得
+\[
+    u(x,y) = u(a,y) + \int_a^x \dfrac{\partial u}{\partial x}(\xi,y)d\xi = \int_a^x \dfrac{\partial u}{\partial x}(\xi,y)d\xi,
+\]
+于是
+\[
+    \begin{aligned}
+        \| u \|_{L^2(U)}^2 = \int_a^b \int_c^d |u(x,y)|^2 \ dy \ dx & = \int_a^b \int_c^d \left| \int_a^x \dfrac{\partial u}{\partial x}(\xi,y)d\xi \right|^2 \ dy \ dx \\
+        &\leqslant \int_a^b \int_c^d (x-a) \left( \int_a^x |\dfrac{\partial u}{\partial x}(\xi,y)|^2 \ d\xi \right) \ dy \ dx,
+    \end{aligned}
+\]
+其中对$ \left| \int_a^x u(\xi,y)d\xi \right|^2 $使用了Cauchy-Schwarz不等式，接着继续放缩可得
+\[
+    \begin{aligned}
+        \| u \|_{L^2(U)}^2 &\leqslant \int_a^b \int_c^d (x-a) \left( \int_a^x |\dfrac{\partial u}{\partial x}(\xi,y)|^2 \ d\xi \right) \ dy \ dx \\
+        &\leqslant \int_a^b \int_c^d (x-a) \left( \int_a^b |\dfrac{\partial u}{\partial x}(\xi,y)|^2 \ d\xi \right) \ dy \ dx \\
+        &= \int_a^b (x-a) dx \cdot \int_c^d \int_a^b |\dfrac{\partial u}{\partial x}(\xi,y)|^2 \ d\xi \ dy \\
+        &= \dfrac{(b-a)^2}{2} \int_c^d \int_a^b |\dfrac{\partial u}{\partial x}(x,y)|^2 \ dx \ dy \\
+        &= \dfrac{(b-a)^2}{2} \| \dfrac{\partial u}{\partial x} \|_{L^2(U)}^2,
+    \end{aligned}
+\]
+类似地，我们有
+\[
+    \| u \|_{L^2(U)}^2 \leqslant \dfrac{(d-c)^2}{2} \| \dfrac{\partial u}{\partial y} \|_{L^2(U)}^2,
+\]
+于是
+\begin{equation}
+    \| u \|_{L^2(U)}^2 \leqslant C^* \| Du \|_{L^2(U)}^2,
+\end{equation}
+其中
+\[
+    C^* = \frac{1}{\frac{2}{(d-c)^2} + \frac{2}{(b-a)^2} }.
+\]
+
+当$ n<p<\infty $时，如果$ u\in W^{1,p}(U) $，则$ u $在相差一个零测集的意义下是Hölder连续的。我们还是从$ C^1(\mathbb{R}^n) $内的函数开始。
+\begin{theorem}{\normalfont\textbf{(Morrey不等式)}}
+    当$ n<p\leqslant \infty $时，考虑任意$ u\in C^1(\mathbb{R}^n) $，则$ u $在$ U $上几乎处处是Hölder连续的，即存在$ \gamma = 1 - n / p\in (0,1) $和只与$ p,n $有关的常数$ C $使得
+    \begin{equation}
+        \| u \|_{C^{0,\gamma}(\mathbb{R}^n)} \leqslant C \| u \|_{W^{1,p}(\mathbb{R}^n)}.
+    \end{equation}
+\end{theorem}
+接着如果$ u = u^* $在$ U $上几乎处处成立，则称$ u^* $是$ u $在$ U $上的一个版本。我们有如下结论。
+\begin{theorem}
+    设$ U $为有界开集，并且$ \partial U $是$ C^1 $的。当$ n<p\leqslant \infty $时，任意$ u\in W^{1,p}(U) $都有一个版本$ u^*\in C^{0,\gamma}(\overline{U}) $，其中$ \gamma = 1 - n / p\in (0,1) $，并且存在和只与$ p,n,U $有关的常数$ C $使得
+    \begin{equation}
+        \| u^* \|_{C^{0,\gamma}(U)} \leqslant C \| u \|_{W^{1,p}(U)}.
+    \end{equation}
+\end{theorem}
+\noindent 借助如上定理，当$ p>n $时我们总是考虑$ u\in W^{1,p}(U) $的属于$ C^{0,\gamma}(\overline{U}) $的连续版本。
+
+最后，当$ k\ne 1 $时，我们有更广义的Sobolev不等式。
+\begin{theorem}{\normalfont\textbf{(广义Sobolev不等式)}}
+    设$ U $为有界开集，并且$ \partial U $是$ C^1 $的。考虑$ u\in W^{k,p}(U) $，则
+    \begin{enumerate}
+        \item 如果$ k< n / p $，则$ u\in L^q(U) $，其中$ \frac{1}{q} = \frac{1}{p} - \frac{k}{n} $，并且存在只与$ p,n,k $和$ U $有关的常数$ C $使得
+        \begin{equation}
+            \| u \|_{L^q(U)} \leqslant C \| u \|_{W^{k,p}(U)};
+        \end{equation}
+        \item 如果$ k>n / p $，则$ u\in C^{k-[\frac{n}{p}]-1,\gamma}(\overline{U}) $，其中
+        \[
+            \gamma = 
+            \begin{cases}
+                [\frac{n}{p}]+1 - \frac{n}{p} & \text{ if } \frac{n}{p}\notin \mathbb{Z} \\
+                \gamma_0\in (0,1) & \text{ if } \frac{n}{p}\in \mathbb{Z},
+            \end{cases}
+        \]
+        并且存在只与$ p,n,k,\gamma $和$ U $有关的常数$ C $使得
+        \begin{equation}
+            \| u \|_{C^{k-[\frac{n}{p}]-1,\gamma}(\overline{U})} \leqslant C \| u \|_{W^{k,p}(U)}.
+        \end{equation}
+    \end{enumerate}
+\end{theorem}
+
+\section{嵌入定理}
+一个自然的想法是将$ W^{k,p}(U) $嵌入到$ C^\ell(U) $中，这一结果称为Sobolev嵌入定理。
+\begin{theorem}{\normalfont\textbf{(Sobolev嵌入定理)}}
+    考虑Sobolev空间$ W^{k,p}(\mathbb{R}^n) $，如下结论成立：
+    \begin{enumerate}
+        \item 如果$ k<\ell $且$ p<n $，$ 1\leqslant p,q<\infty $是满足
+        \begin{equation}
+            \frac{1}{p} - \frac{k}{n} = \frac{1}{q} - \frac{\ell}{n}
+        \end{equation}
+        的两个实数，则
+        \begin{equation}
+            W^{k,p}(\mathbb{R}^n) \subset W^{\ell,q}(\mathbb{R}^n),
+        \end{equation}
+        并且该嵌入是连续的。
+        \item 如果$ n<pk $，并且
+        \begin{equation}
+            \frac{1}{p} - \frac{k}{n} = - \frac{r+\alpha}{n} \text{, that is, } r+\alpha = k - \frac{n}{p},
+        \end{equation}
+        其中$ \alpha\in(0,1) $，$ r $是一个非负整数，则
+        \begin{equation}
+            W^{k,p}(\mathbb{R}^n) \subset C^{r,\alpha}(\mathbb{R}^n).
+        \end{equation}
+    \end{enumerate}
+\end{theorem}
+作为该定理的一种特殊情况，当$ k-\ell > n / p $（即定理第二部分$ r=\ell $，$ \alpha=0 $）且$ 1\leqslant p<\infty $时，我们有
+\begin{equation}
+    W^{k,p}(\mathbb{R}^n) \subset C^\ell(\mathbb{R}^n),
+\end{equation}
+并且恒同算子$ Id: v\in W^{k,p}(\mathbb{R}^n)\mapsto C^\ell(\mathbb{R}^n) $是一个有界线性算子。
+
+另一种常用的形式是令$ p=2 $，于是当$ 2k>n $时，我们有
+\begin{equation}
+    H^{k+\ell}(\mathbb{R}^n) \subset C^\ell(\mathbb{R}^n)
+\end{equation}
+对任意非负整数$ j $都成立。
+
+G-N-S不等式（对应于定理中$ k=1,\ell=0 $）表明$ W^{1,p}(U) $可以嵌入到$ L^{p^*}(U) $中，事实上，该嵌入是一个紧嵌入，类似地，一些Sobolev空间自然地和$ L^p $ 空间存在相互紧嵌入的关系。首先我们要定义紧嵌入。
+\begin{definition}
+    设$ X,Y $是Banach空间，如果
+    \begin{enumerate}
+        \item 存在$ C $，使得对于任意$ u\in X $，都有$ \| u \|_Y \leqslant C \| u \|_X $；
+        \item $ X $内任意有界序列都在$ Y $内是预紧（列紧）的，即对于任意有界序列$ \{ u_m \}\subset X $，存在$ \{ u_m \} $的在$ Y $内收敛的子列$ \{ u_{m_k} \} $:
+        \[
+            \lim_{k\to\infty} \| u_{m_k} - u \|_Y = 0, \quad u\in Y.
+        \]
+    \end{enumerate}
+    则称$ X $紧嵌入到$ Y $中，记作$ X \subset\subset Y $。
+\end{definition}
+回忆在测度为有限正数的有界开集上，$ L^p $空间满足$ L^p(U) \subset L^{p-1}(U) $的包含关系，于是可以证明如下一般性的定理，该结论称为紧嵌入定理。
+\begin{theorem}{\normalfont\textbf{(Rellich-Kondrachov紧性定理)}}
+    设$ U $是有界开集，并且$ \partial U $是$ C^1 $的。
+    如果$ k>\ell $且
+    \begin{equation}
+        \frac{1}{p} - \frac{k}{n} < \frac{1}{q} - \frac{\ell}{n},
+    \end{equation}
+    则
+    \begin{equation}
+        W^{k,p}(U) \subset\subset W^{\ell,q}(U).
+    \end{equation}
+    令$ k=1,\ell=0 $，如果$ 1\leqslant p < n $，则
+    \begin{equation}
+        W^{1,p}(U) \subset\subset L^q(U),\quad \forall 1\leqslant q < p^*.
+    \end{equation}
+\end{theorem}
+\noindent 特别地，$ W^{1,p}(U)\subset\subset L^p(U) $，并且即使$ \partial U $并不是$ C^1 $的时候我们也有$ W^{1,p}_0(U)\subset\subset L^p(U) $。
+
+\section{二阶椭圆方程}
+本节我们在Sobolev空间上考虑如下带有Dirichlet边界的边值问题
+\begin{equation}\label{eq:elliptic_problem}
+    \begin{aligned}
+        \mathcal{L}u &= f, \quad x\in U,\\
+        u &= 0, \quad x\in \partial U,
+    \end{aligned}
+\end{equation}
+其中$ U $是$ \mathbb{R}^n $内的一个有界开集，$ \mathcal{L} $是二阶偏微分算子，形如
+\begin{equation}\label{eq:elliptic}
+    \mathcal{L}u = -\sum_{i,j=1}^n \dfrac{\partial}{\partial x_i} \left( a_{ij}(x) \dfrac{\partial u}{\partial x_j} \right) + \sum_{i=1}^n b_i(x) \dfrac{\partial u}{\partial x_i} + c(x)u,
+\end{equation}
+这种形式称为散度形式，另一种常用的形式是非散度形式，即
+\begin{equation}
+    \mathcal{L}u = -\sum_{i,j=1}^n a_{ij}(x) \dfrac{\partial^2 u}{\partial x_i \partial x_j} + \sum_{i=1}^n b_i(x) \dfrac{\partial u}{\partial x_i} + c(x)u.
+\end{equation}
+散度形式适合使用能量方法，而非散度形式适合使用基于极值原理的方法。下面给出一些定义。
+
+\begin{definition}
+    如果存在常数$ \theta > 0  $使得对于任意$ \xi\in \mathbb{R}^n $，都有
+    \begin{equation}
+        \sum_{i,j=1}^n a_{ij}(x)\xi_i\xi_j \geqslant \theta |\xi|^2,\quad a.e.\ x\in U
+    \end{equation}
+    则称$ \mathcal{L} $在$ U $上是（一致）\textcolor{blue}{椭圆}的。
+\end{definition}
+一般我们还要求$ a_{ij} = a_{ji} $是对称的，当$ a_{ij} $对称时，上述条件等价于要求$ A(x) = (a_{ij}(x)) $的所有特征值都大于$ \theta $，从而在$ x\in U $上总是对称正定矩阵。在$ \mathcal{L} $内，二阶导数项控制解的扩散，一阶导数项控制解在$ U $内的对流和运动，而零阶项则控制解的局部增减。
+
+\subsection{弱解}
+借助弱导数，我们可以定义相较古典解对光滑性要求更低的弱解。注意到对于任意$ v\in C^\infty_c(U) $，我们将它与$ \mathcal{L}u $相乘并在$ U $上做分部积分可得
+\begin{equation}
+    \begin{aligned}
+        \int_U \mathcal{L}u v \ dx &= -\int_U \sum_{i,j=1}^n \dfrac{\partial}{\partial x_i} \left( a_{ij}(x) \dfrac{\partial u}{\partial x_j} \right) v \ dx + \int_U \sum_{i=1}^n b_i(x) \dfrac{\partial u}{\partial x_i} v \ dx + \int_U c(x)uv \ dx \\
+        &= \int_U \sum_{i,j=1}^n a_{ij}(x) \dfrac{\partial u}{\partial x_j} \dfrac{\partial v}{\partial x_i} \ dx + \int_U \sum_{i=1}^n b_i(x) \dfrac{\partial u}{\partial x_i} v \ dx + \int_U c(x)uv \ dx,
+    \end{aligned}
+\end{equation}
+当$ u\in H^1_0(U) $时，上述等式对于任意$ v\in H^1_0(U) $都成立（$ H^1_0(U) $是$ C^\infty_c(U) $在$ H^1(U) $内的闭包，利用封闭性可以使用逼近技术证明该等式成立），于是我们可以定义弱解。
+\begin{definition}
+    给定散度形式的椭圆微分算子$ \mathcal{L} $如\eqref{eq:elliptic}所示，则可以在$ H^1_0(U)\times H^1_0(U) $上定义如下双线性形式
+    \begin{equation}
+        a(u,v) = \int_U \sum_{i,j=1}^n a_{ij}(x) \dfrac{\partial u}{\partial x_j} \dfrac{\partial v}{\partial x_i} + \sum_{i=1}^n b_i(x) \dfrac{\partial u}{\partial x_i} v + c(x)uv \ dx,
+    \end{equation}
+    相应地定义线性泛函
+    \begin{equation}
+        l(v) = \int_U f v \ dx.
+    \end{equation}
+    如果$ u\in H^1_0(U) $满足
+    \begin{equation}\label{eq:variation}
+        a(u,v) = l(v),\quad \forall v\in H^1_0(U),
+    \end{equation}
+    则称$ u $是方程$ \mathcal{L}u = f $的一个弱解，\eqref{eq:variation}称为问题\eqref{eq:elliptic_problem}的变分形式。
+\end{definition}
+如果问题变为
+\[
+    \begin{aligned}
+        \mathcal{L}u &= f^0-\sum_{i=1}^n \dfrac{\partial f^i}{\partial x_i} , \quad x\in U,\\
+        u &= 0, \quad x\in \partial U,
+    \end{aligned}  
+\]
+其中$ f = f^0-\sum_{i=1}^n \frac{\partial f^i}{\partial x_i} \in H^{-1}(U) :=(H^1_0(U))^* $在$ H^1_0(U) $的对偶空间（即$ H^1_0(U) $上全体有界线性泛函组成的空间）内，相应的变分形式为
+\[
+    a(u,v) = \left<f,v\right>,\quad \forall v\in H^1_0(U).
+\]
+其中$ \left<f,v\right> = \int_U f^0v + \sum_{i=1}^n f^i\frac{\partial v}{\partial x_i} dx $，这里的$ \left<\cdot,\cdot \right>: H^{-1}(U)\times H^1_0(U) \to \mathbb{R} $表示将$ H^{-1}(U) $内的元素作用在$ H^1_0(U) $上。
+
+关于$ H^{-1}(U) $，我们有如下刻画。
+\begin{theorem}
+    令$ H^{-1}(U) $为$ H^1_0(U) $的对偶空间，则
+    \begin{enumerate}
+        \item $ H^1_0(U)\subset L^2(U)\subset H^{-1}(U) $。对任意的$ u\in H^1_0(U) $，$ v\in L^2(U)\subset H^{-1}(U) $，都有
+        \begin{equation}
+            \left<v,u\right> = (v,u)_{L^2(U)} = \int_U vu \ dx.
+        \end{equation}
+        \item 如果$ f\in H^{-1}(U) $，则存在$ f^0,f^1,\cdots ,f^n\in L^2(U) $满足
+        \begin{equation}\label{eq:duality}
+            \left<f,v\right> = \int_U f^0v + \sum_{i=1}^n f^i\frac{\partial v}{\partial x_i} dx,\quad \forall v\in H^1_0(U),
+        \end{equation}
+        并且
+        \begin{equation}
+            \| f \|_{H^{-1}(U)} = \inf \left\{ \left( \int_U \sum_{i=0}^n |f^i|^2dx \right)^{1 / 2}\mid f\ s.t. \eqref{eq:duality} \text{ for } f^0,\cdots ,f^n\in L^2(U)  \right\}.
+        \end{equation}
+        这里的$ \| \cdot \|_{H^{-1}(U)} $是$ H^{-1}(U) $上的范数，定义为
+        \begin{equation}
+            \| f \|_{H^{-1}(U)} = \sup_{v\in H^1_0(U)} \left\{ \left<f,v\right> \mid \| v \|_{H^1_0(U)} \leqslant 1 \right\} .
+        \end{equation}
+    \end{enumerate}
+\end{theorem}
+\noindent 第二条结论相当于泛函分析中的Riesz表示定理，该定理表明紧致Housedorff空间的对偶空间内的正线性泛函对应着唯一Baire测度，并且可以将该正线性泛函表示为这一Baire测度下的积分。
+
+如果边界条件为$ u|_{\partial U} = g $，则可以寻找任意一个$ w\in H^1(U) $使得$ w|_{\partial U} = g $，之后令$ u = v+w $并考虑零边界问题
+\[
+    \begin{aligned}
+        \mathcal{L}v &= f - \mathcal{L}w, \quad x\in U,\\
+        v &= 0, \quad x\in \partial U.
+    \end{aligned}
+\]
+因此以下我们只关注零边界条件的问题。
+
+\subsection{存在性和唯一性}
+为了讨论问题\eqref{eq:elliptic_problem}下的弱解的存在性和唯一性，我们需要使用Lax-Milgram定理。
+\begin{theorem}{\normalfont\textbf{(Lax-Milgram定理)}}
+    设$ H $是Hilbert空间，$ B(\cdot,\cdot) $是$ H \times H $上的双线性泛函，存在常数$ \alpha,\beta>0 $使得
+    \begin{equation}
+        |B(u,v)| \leqslant C \| u \|_H \| v \|_H,\quad \forall u,v\in H,
+    \end{equation}
+    且
+    \begin{equation}
+        \beta \| u \|_H^2 \leqslant B(u,u),\quad \forall u\in H.
+    \end{equation}
+    令$ f:H\to \mathbb{R} $是$ H $上的一个有界线性泛函，则存在唯一的$ u\in H $满足
+    \begin{equation}
+        B(u,v) = \left<f, v\right>,\quad \forall v\in H.
+    \end{equation}
+\end{theorem}
+\noindent 该定理不要求$ B(\cdot,\cdot) $是对称的，只对$ B(\cdot,\cdot) $的有界性和椭圆性作出了要求。
+
+为了使用Lax-Milgram定理，需要验证问题\eqref{eq:elliptic_problem}的变分形式\eqref{eq:variation}中的双线性形式$a(\cdot,\cdot)$和线性泛函$l(\cdot)$满足定理的要求，为此需要进行能量估计，有以下结论。
+\begin{theorem}
+    存在常数$ \alpha,\beta>0 $和$ \gamma\geqslant 0 $使得
+    \begin{equation}
+        \begin{aligned}
+            |a(u,v)| &\leqslant \alpha \| u \|_{H^1_0(U)} \| v \|_{H^1_0(U)},\quad \forall u,v\in H^1_0(U),\\
+            \beta \| u \|_{H^1_0(U)}^2 &\leqslant a(u,u) + \gamma\| u \|_{L^2(U)}^2 ,\quad \forall u\in H^1_0(U),\\
+        \end{aligned}
+    \end{equation}
+\end{theorem}
+\noindent 相比Lax-Milgram定理中的椭圆性要求，在第二个估计中我们只得到了一个弱一些的结果，因此在如下的存在性定理中必须考虑到这一点，不能直接使用Lax-Milgram定理。
+
+\begin{theorem}
+    存在$ \gamma\geqslant 0 $使得给定任意的$ \mu\geqslant \gamma $和$ f\in L^2(U) $，都存在唯一的弱解$ u\in H^1_0(U) $满足如下边值问题
+    \begin{equation}\label{eq:elliptic_existence}
+        \begin{aligned}
+            \mathcal{L}u + \textcolor{red}{\mu u} &= f, \quad x\in U,\\
+            u &= 0, \quad x\in \partial U.
+        \end{aligned}
+    \end{equation}
+\end{theorem}
+
+\subsection{Fredholm替代}
+通常微分算子$ \mathcal{L} $不是有界算子但却是紧算子\footnote{紧算子将任意有界序列映射到预紧的序列}，这类算子具有一系列类似于矩阵的性质，借助对这类算子的研究可以得到Fredholm理论。首先需要给出伴随算子的定义。
+\begin{definition}
+    称算子$ \mathcal{L}^*:H^1_0(U)\to L^2(U) $：
+    \begin{equation}
+        \mathcal{L}^*v := -\sum_{i,j=1}^n \dfrac{\partial}{\partial x_i} \left( a_{ij}(x) \dfrac{\partial v}{\partial x_j} \right) - \sum_{i=1}^n b_i(x) \dfrac{\partial v}{\partial x_i} + \left( c(x)-\sum_{i=1}^n \dfrac{\partial b_i}{\partial x_i}  \right) v
+    \end{equation}
+    为微分算子$ \mathcal{L}:H^1_0(U)\to L^2(U) $
+    \[
+        \mathcal{L}u = -\sum_{i,j=1}^n \dfrac{\partial}{\partial x_i} \left( a_{ij}(x) \dfrac{\partial u}{\partial x_j} \right) + \sum_{i=1}^n b_i(x) \dfrac{\partial u}{\partial x_i} + c(x)u
+    \]
+    的\textcolor{blue}{形式伴随算子}，相应的\textcolor{blue}{伴随双线性形式}$ a^*(\cdot,\cdot):H^1_0(U)\times H^1_0(U)\to \mathbb{R} $为
+    \begin{equation}
+        a^*(v,u) := a(u,v),\quad \forall u,v\in H^1_0(U).
+    \end{equation}
+    如果
+    \begin{equation}
+        a^*(v,u) = (f,u) = l(u),\quad \forall u\in H^1_0(U),
+    \end{equation}
+    称$ v\in H^1_0(U) $是\textcolor{blue}{伴随问题}
+    \begin{equation}
+        \begin{aligned}
+            \mathcal{L}^*v &= f, \quad x\in U,\\
+            v &= 0, \quad x\in \partial U,
+        \end{aligned}
+    \end{equation}
+    的一个弱解。
+\end{definition}
+于是我们有如下Fredholm替代定理。
+\begin{theorem}
+    给定微分算子$ \mathcal{L} $，以下两个命题有且仅有一个成立：
+    \begin{enumerate}
+        \item 任给$ f\in L^2(U) $，存在唯一弱解满足如下边值问题：
+        \begin{equation}\label{eq:inhomogeneous}
+            \begin{aligned}
+                \mathcal{L}u &= f, \quad x\in U,\\
+                u &= 0, \quad x\in \partial U.
+            \end{aligned}
+        \end{equation}
+        \item 存在的不恒为零的弱解$ u $满足如下齐次边值问题：
+        \begin{equation}\label{eq:homogeneous}
+            \begin{aligned}
+                \mathcal{L}u &= 0, \quad x\in U,\\
+                u &= 0, \quad x\in \partial U.
+            \end{aligned}
+        \end{equation}
+    \end{enumerate}
+    这两个命题互相称作彼此的Fredholm替代（Fredholm alternative）。进一步，我们有如下结论：
+    \begin{enumerate}
+        \item 当第二个命题成立时，问题\eqref{eq:homogeneous}的弱解空间$ N $是$ H^1_0(U) $的有限维子空间，并且该空间维数与相应伴随问题
+        \begin{equation}
+            \begin{aligned}
+                \mathcal{L}^*v &= 0, \quad x\in U,\\
+                v &= 0, \quad x\in \partial U
+            \end{aligned}
+        \end{equation}
+        的弱解空间$ N^*\subset N^1_0(U) $的维数相同；
+        \item 边值问题\eqref{eq:inhomogeneous}的弱解存在当且仅当
+        \begin{equation}
+            l(v) = (f,v) = 0,\quad \forall v\in N^*.
+        \end{equation}
+    \end{enumerate}
+\end{theorem}
+\noindent 这一定理可以让我们通过研究原问题的Fredholm替代问题来判断原问题的解的存在性和唯一性。
+\begin{theorem}
+    给定微分算子$ \mathcal{L} $，则
+    \begin{enumerate}
+        \item 存在至多可列集$ \Lambda $，边值问题
+        \begin{equation}
+            \begin{aligned}
+                \mathcal{L}u &= \lambda u + f, \quad x\in U,\\
+                u &= 0, \quad x\in \partial U
+            \end{aligned}
+        \end{equation}
+        在任意$ f\in L^2(U) $下都存在唯一弱解当且仅当$ \lambda \notin \Lambda $。
+        \item 如果$ \Lambda $不是有限集合，即$ \Lambda = \{\lambda_k\}_{k=1}^\infty $，则$ +\infty \in \overline{\Lambda} $，并且可以通过重新排列使$ \lambda_k $单调不减地发散到$ +\infty $。
+    \end{enumerate}
+    称$ \Lambda $中的元素$ \lambda_k $为$ \mathcal{L} $的\textcolor{blue}{谱}（spectrum）。紧算子$ \mathcal{L} $的谱集至多可列。
+\end{theorem}
+称如下边值问题
+\[
+    \begin{aligned}
+        \mathcal{L}u &= \lambda u, \quad x\in U,\\
+        u &= 0, \quad x\in \partial U
+    \end{aligned}
+\]
+为$ \mathcal{L} $相应的\textcolor{blue}{特征值问题}，如果存在非平凡$ u $满足该问题，即$ \mathcal{L} - \lambda I $可逆，则称$ \lambda $为\textcolor{blue}{特征值}，$ u $为特征函数。由于$ \mathcal{L} $是紧算子，该特征值问题具有不恒为零的非平凡解当且仅当$ \lambda \in \Lambda $，即紧算子的谱集只包含特征值。对于一般的线性算子，谱集不止包含点谱（point spectrum, 即特征值），还包含连续谱（continuous spectrum, 即$ (T-\lambda I)^{-1} $存在但是不是有界算子）和残谱（residual spectrum, 即$ (T-\lambda I)^{-1} $无法在$ T $的像空间的某个稠密子集上定义）。利用$ \mathcal{L} $的紧性可知它的谱集内只包含特征值，于是当$ \lambda\notin \Lambda $时，$ \mathcal{L} - \lambda I $可逆且逆算子有界，于是边值问题\eqref{eq:elliptic_existence}应当具有唯一弱解。
+\begin{theorem}
+    如果$ \lambda\notin \Lambda $，则逆微分算子$ (\mathcal{L}-\lambda I)^{-1} $是有界算子，存在只与$ \lambda,U $和$ \mathcal{L} $有关的常数$ C $使得
+    \begin{equation}
+        \| u \|_{L^2(U)} \leqslant  C \| f \|_{L^2(U)},
+    \end{equation}
+    其中$ f\in L^2(U) $，$ u\in H^1_0(U) $是边值问题
+    \begin{equation}
+        \begin{aligned}
+            \mathcal{L}u &= \lambda u + f, \quad x\in U,\\
+            u &= 0, \quad x\in \partial U
+        \end{aligned}
+    \end{equation}
+    的唯一弱解。
+\end{theorem}
+
+\subsection{正则性}
+在得到了弱解的存在性和唯一性之后，我们需要讨论弱解的正则性，即弱解的光滑性。一般地，问题$ \mathcal{L}u=f $的弱解的光滑性依赖于右端项$ f $的光滑性和区域边界$ \partial U $的光滑性，我们以最简单的Laplace方程为例说明这一点，考虑
+\[
+    -\Delta u = f,\quad x\in \mathbb{R}^n.
+\]
+假设该问题的解$ u $具有足够的光滑性并且在无穷远处衰减地足够快，于是使用分部积分可得
+\[
+    \begin{aligned}
+        \int_{\mathbb{R}^n} f^2 dx = \int_{\mathbb{R}^n} (\Delta u)^2 dx &= \sum_{i,j=1}^n \int_{\mathbb{R}^n} \dfrac{\partial^2 u}{\partial x_i^2} \dfrac{\partial^2 u}{\partial x_j^2} dx \\
+        &= -\sum_{i,j=1}^n \int_{\mathbb{R}^n} \dfrac{\partial u}{\partial x_i} \dfrac{\partial^3 u}{\partial x_j^2 \partial x_i} dx \\
+        &= \sum_{i,j=1}^n \int_{\mathbb{R}^n} \left( \dfrac{\partial^2 u}{\partial x_i\partial x_j} \right)^2 dx\\
+        &= \int_{\mathbb{R}^n} |D^2 u|^2 dx,
+    \end{aligned}
+\]
+因此$ u $的二阶导数的$ L^2 $范数可以被右端项的$ L^2 $范数控制。如果令$ w = u_{x_i} $，则有$ -\Delta w = g $，其中$ g = g_{x_i} $，进而重复上述操作可以用$ g $的$ L^2 $范数，即$ f $的一阶导数的$ L^2 $范数控制$ u $的三阶导数的$ L^2 $范数。一般地，如果$ f\in H^m $，则我们可以期望弱解$ u\in H^{m+2} $，即右端项和解的光滑性相差两阶。为了严格化这一表述，需要分别研究弱解$ u $在$ U $内部和在$ \partial U $上的光滑性。上面的讨论仅仅是形式化的，因为一般开始时我们只知道$ u\in H^1_0(U) $，因此无法直接像上面一样对$ u $求高阶偏导，为了绕开这一困难需要对一些差商进行分析，并且需要充分利用微分算子$ \mathcal{L} $的椭圆性条件，这一过程相当复杂，这里只列举出结果。
+
+\subsubsection{内点正则性}
+本小节内$ U $是有界开集，考虑散度形式的微分算子$ \mathcal{L} $：
+\[
+    \mathcal{L}u = -\sum_{i,j=1}^n \dfrac{\partial}{\partial x_i} \left( a_{ij}(x) \dfrac{\partial u}{\partial x_j} \right) + \sum_{i=1}^n b_i(x) \dfrac{\partial u}{\partial x_i} + c(x)u,  
+\]
+要求它满足一致椭圆性条件。我们有如下内点正则性定理。
+\begin{theorem}
+    设$ U $是有界开集，$ \mathcal{L} $满足一致椭圆条件，系数满足
+    \[
+        a_{ij}\in C^1(U),\quad b_i(x),c(x)\in L^\infty(U),
+    \]
+    并且
+    \[
+        f\in L^2(U).
+    \]
+    设$ u\in H^1(U) $是$ U $上椭圆方程$ \mathcal{L}u = f $的一个弱解，则
+    \begin{equation}
+        u \in H_{\rm loc}^2(U),
+    \end{equation}
+    并且对任意开集$ V\subset\subset U $，都有如下估计
+    \begin{equation}
+        \| u \|_{H^2(V)} \leqslant C (\| f \|_{L^2(U)} + \| u \|_{L^2(U)}),
+    \end{equation}
+    其中$ C $只与$ U,V $以及$ \mathcal{L} $有关。
+\end{theorem}
+\noindent 该定理中我们不关注边界处的情况，不要求$ u\in H^1_0(U) $。另外，该定理告诉我们问题的弱解$ u\in H^2_{\rm loc}(U) $，于是
+\[
+    a(u,v) = (\mathcal{L}u,v),\quad \forall v\in H^1_0(U),
+\]
+而根据弱解的定义有$ a(u,v) = (f,v) $，将两式相减可得
+\[
+    0 = (\mathcal{L}u-f,v),\quad \forall v\in H^1_0(U),
+\]
+于是$ \mathcal{L}u = f $在$ U $内部几乎处处成立，因此变分形式给出的弱解几乎处处是原微分方程的解。
+
+更一般地，可以得到更高阶的内点正则性定理，即
+\begin{theorem}
+    设$ U $是有界开集，$ \mathcal{L} $满足一致椭圆条件，系数满足
+    \[
+        a_{ij},b_i(x),c(x)\in C^{m+1}(U),
+    \]
+    这里$ m $是任意非负整数，并且
+    \[
+        f\in H^m(U).
+    \]
+    设$ u\in H^1(U) $是$ U $上椭圆方程$ \mathcal{L}u = f $的一个弱解，则
+    \begin{equation}
+        u \in H_{\rm loc}^{m+2}(U),
+    \end{equation}
+    并且对任意开集$ V\subset\subset U $，都有如下估计
+    \begin{equation}
+        \| u \|_{H^{m+2}(V)} \leqslant C (\| f \|_{H^m(U)} + \| u \|_{L^2(U)}),
+    \end{equation}
+    其中$ C $只与$ U,V $以及$ \mathcal{L} $有关。
+\end{theorem}
+特别地，当$ m=+\infty $时，我们可以证明弱解的光滑性。
+\begin{theorem}
+    设$ U $是有界开集，$ \mathcal{L} $满足一致椭圆条件，系数满足
+    \[
+        a_{ij},b_i(x),c(x)\in C^{\infty}(U),
+    \]
+    并且右端项
+    \[
+        f\in C^{\infty}(U).
+    \]
+    设$ u\in H^1(U) $是$ U $上椭圆方程$ \mathcal{L}u = f $的一个弱解，则
+    \begin{equation}
+        u \in C^{\infty}(U).
+    \end{equation}
+\end{theorem}
+
+\subsubsection{边界正则性}
+现在考虑弱解在包含边界的区域上的整体正则性，仍然从$ m=0 $开始，我们有如下边界正则性定理。
+\begin{theorem}
+    设$ U $是有界开集，$ \mathcal{L} $满足一致椭圆条件，系数满足
+    \[
+        a_{ij}\in C^1(\overline{U}),\quad b_i(x),c(x)\in L^\infty(U),
+    \]
+    并且右端项
+    \[
+        f\in L^2(U).
+    \]
+    设$ u\in H^1_0(U) $是$ U $上椭圆方程$ \mathcal{L}u = f $的零边值$ u|_{\partial U} = 0 $问题一个弱解，且区域边界
+    \begin{equation}
+        \partial U \text{ is } C^2,
+    \end{equation}
+    则弱解
+    \begin{equation}
+        u \in H^2(U),
+    \end{equation}
+    并且有如下估计
+    \begin{equation}
+        \| u \|_{H^2(U)} \leqslant C (\| f \|_{L^2(U)} + \| u \|_{L^2(U)}),
+    \end{equation}
+    其中$ C $只与$ U,V $以及$ \mathcal{L} $有关。
+\end{theorem}
+\noindent 相比于上一小节中的定理，为了将边界点纳入估计需要限制边界值，因此这里需要$ u\in H^1_0(U) $，而不仅仅是$ u\in H^1(U) $。另外，当$ u $是该问题的唯一弱解时，定义中的估计可以简化为
+\begin{equation}
+    \| u \|_{H^2(U)} \leqslant C \| f \|_{L^2(U)}.
+\end{equation}
+
+与之前一样，我们可以得到更高阶的包含边界的正则性定理。
+\begin{theorem}
+    设$ U $是有界开集，$ \mathcal{L} $满足一致椭圆条件，系数满足
+    \[
+        a_{ij},b_i(x),c(x)\in C^{m+1}(\overline{U}),
+    \]
+    并且右端项
+    \[
+        f\in H^m(U).
+    \]
+    设$ u\in H^1_0(U) $是$ U $上椭圆方程$ \mathcal{L}u = f $的零边值$ u|_{\partial U} = 0 $问题一个弱解，且区域边界
+    \begin{equation}
+        \partial U \text{ is } C^{m+2},
+    \end{equation}
+    则弱解
+    \begin{equation}
+        u \in H^{m+2}(U),
+    \end{equation}
+    并且有如下估计
+    \begin{equation}
+        \| u \|_{H^{m+2}(U)} \leqslant C (\| f \|_{H^m(U)} + \| u \|_{L^2(U)}),
+    \end{equation}
+    其中$ C $只与$ U,V $以及$ \mathcal{L} $有关。
+\end{theorem}
+\noindent 如果$ u $是该问题的唯一弱解，定义中的估计可以简化为
+\begin{equation}
+    \| u \|_{H^{m+2}(U)} \leqslant C \| f \|_{H^m(U)}.
+\end{equation}
+
+特别地，当$ m=+\infty $时，我们可以证明弱解在$ U $上直到边界都是光滑的。
+\begin{theorem}
+    设$ U $是有界开集，$ \mathcal{L} $满足一致椭圆条件，系数满足
+    \[
+        a_{ij},b_i(x),c(x)\in C^{\infty}(\overline{U}),
+    \]
+    并且右端项
+    \[
+        f\in C^{\infty}(\overline{U}).
+    \]
+    设$ u\in H^1_0(U) $是$ U $上椭圆方程$ \mathcal{L}u = f $的零边值$ u|_{\partial U} = 0 $问题一个弱解，且区域边界
+    \begin{equation}
+        \partial U \text{ is } C^{\infty},
+    \end{equation}
+    则弱解
+    \begin{equation}
+        u \in C^{\infty}(\overline{U}).
+    \end{equation}
+\end{theorem}
+
+\subsection{极值原理}
+本节我们使用微分算子的非散度形式，即
+\[
+    \mathcal{L}u = -\sum_{i,j=1}^n a_{ij}(x) \dfrac{\partial^2 u}{\partial x_i \partial x_j} + \sum_{i=1}^n b_i(x) \dfrac{\partial u}{\partial x_i} + c(x)u,
+\]
+要求其中的系数$ a_{ij},b_j,c $都至少连续且满足一致椭圆性条件。
+
+如果某函数$ u\in C^2 $在开集$ U $的某内点$ x_0 $处取到极大值，则
+\[
+    Du(x_0) = 0,\quad D^2u(x_0) \leqslant 0,
+\]
+如果在$ x_0 $处取到极小值，则
+\[
+    Du(x_0) = 0,\quad D^2u(x_0) \geqslant 0.
+\]
+为了利用这些性质，需要要求弱解$ u $至少是$ C^2 $的，根据上一节的讨论，当右端项$ f $和边界$ \partial U $足够光滑时，这一条件可以被满足，因此为了简单起见，这里假设$ u\in C^2(U) $。
+
+\subsubsection{弱极值原理}
+本小节内我们要求区域$ U $是有界开集。我们有如下弱极值原理。
+\begin{theorem}
+    考虑椭圆微分算子$ \mathcal{L} $，在$ U $上$ c\equiv 0 $，给定$ u\in C^2(U)\cap C(\overline{U}) $，则
+    \begin{enumerate}
+        \item 如果$ \mathcal{L}u\leqslant 0 $对任意$ x\in U $都成立，则$ \max_{\overline{U}} u = \max_{\partial U} u $；
+        \item 如果$ \mathcal{L}u\geqslant 0 $对任意$ x\in U $都成立，则$ \min_{\overline{U}} u = \min_{\partial U} u $。
+    \end{enumerate}
+\end{theorem}
+当$ c\geqslant 0 $时，我们可以得到类似的结论。
+\begin{theorem}
+    考虑椭圆微分算子$ \mathcal{L} $，在$ U $上$ c\geqslant 0 $，给定$ u\in C^2(U)\cap C(\overline{U}) $，则
+    \begin{enumerate}
+        \item 如果$ \mathcal{L}u\leqslant 0 $对任意$ x\in U $都成立，则
+        \begin{equation}
+            \min_{\overline{U}} u \leqslant  \min_{\partial U} u^+.
+        \end{equation}
+        \item 如果$ \mathcal{L}u\geqslant 0 $对任意$ x\in U $都成立，则
+        \begin{equation}
+            \max_{\overline{U}} u \geqslant  -\max_{\partial U} u^-.
+        \end{equation}
+    \end{enumerate}
+    其中$ u^+ = \max(u,0) $，$ u^- = \max(-u,0) $。
+\end{theorem}
+弱极值原理表明椭圆问题$ \mathcal{L}u = f $的弱解在开集$ U $上的极值\emph{可以}在边界上取到，但没有说明在$ U $的内部是否存在极值点。
+
+\subsubsection{强极值原理}
+强极值定理断言了椭圆问题的弱解在开集$ U $的内部不可能取到极值，除非该函数是常值函数。为了证明这一点需要如下的Hopf引理。
+\begin{lemma}{\normalfont\textbf{(Hopf引理)}}
+    考虑椭圆微分算子$ \mathcal{L} $，在$ U $上$ c\equiv  0 $，给定$ u\in C^2(U)\cap C(\overline{U}) $。如果
+    \[
+        \mathcal{L}u \leqslant 0, \quad x\in U,
+    \]
+    并且存在$ x_0\in \partial U $使得
+    \[
+        u(x_0) > u(x),\quad \forall x\in U,
+    \]
+    在$ x_0 $处满足内球条件，即存在开球$ B\subset U $使得$ x_0\in \partial B $，则
+    \begin{enumerate}
+        \item 弱解$ u $在$ x_0 $处外法向$ \nu $上的方向导数严格为正，即
+        \begin{equation}
+            \dfrac{\partial u}{\partial \nu}(x_0) >0,
+        \end{equation}
+        \item 如果条件放宽为$ c\geqslant 0 $，则在$ u(x_0)\geqslant 0 $时第一条结论依然成立。
+    \end{enumerate}
+\end{lemma}
+使用如上技术性的引理可以证明强极值原理。
+\begin{theorem}
+    考虑椭圆微分算子$ \mathcal{L} $，在有界连通开集$ U $上$ c\equiv 0 $，给定$ u\in C^2(U)\cap C(\overline{U}) $。以下结论成立：
+    \begin{enumerate}
+        \item 如果$ \mathcal{L}u\leqslant 0 $对任意$ x\in U $都成立，则$ u $在$ U $的内部不可能取到它在$ \overline{U} $上的极大值，除非$ u $在$ U $上是常值函数；
+        \item 如果$ \mathcal{L}u\geqslant 0 $对任意$ x\in U $都成立，则$ u $在$ U $的内部不可能取到它在$ \overline{U} $上的极小值，除非$ u $在$ U $上是常值函数。
+    \end{enumerate}
+\end{theorem}
+当$ c\geqslant 0 $时，我们可以得到类似的结论。
+\begin{theorem}
+    考虑椭圆微分算子$ \mathcal{L} $，在有界连通开集$ U $上$ c\geqslant 0 $，给定$ u\in C^2(U)\cap C(\overline{U}) $。以下结论成立：
+    \begin{enumerate}
+        \item 如果$ \mathcal{L}u\leqslant 0 $对任意$ x\in U $都成立，则$ u $在$ U $的内部不可能取到它在$ \overline{U} $上的\textcolor{red}{非负}极大值，除非$ u $在$ U $上是常值函数；
+        \item 如果$ \mathcal{L}u\geqslant 0 $对任意$ x\in U $都成立，则$ u $在$ U $的内部不可能取到它在$ \overline{U} $上的\textcolor{red}{非正}极小值，除非$ u $在$ U $上是常值函数。
+    \end{enumerate}
+\end{theorem}
+
+最后，当弱解$ u $时非负的时候，它的极小值和极大值可以互相控制。
+\begin{theorem}{\normalfont\textbf{(Harnack不等式)}}
+    如果$ u\geqslant 0 $是椭圆问题$ \mathcal{L}u = 0 $在$ U $的$ C^2 $弱解，则任意满足$ V\subset\subset U $的连通开集$ V $上，存在只与$ V $和$ \mathcal{L} $有关的常数$ C $使得
+    \begin{equation}
+        \sup_{V} u \leqslant C \inf_{V} u.
+    \end{equation}
+\end{theorem}
+
+\subsection{特征值问题}
+本节的最后我们考虑有界开集$ U $上的椭圆特征值问题
+\begin{equation}
+    \begin{aligned}
+        \mathcal{L}u &= \lambda u, \quad x\in U,\\
+        u &= 0, \quad x\in \partial U,
+    \end{aligned}
+\end{equation}
+首先讨论对称椭圆算子的特征值问题，之后再讨论非对称椭圆算子的特征值问题。
+
+\subsubsection{对称椭圆算子}
+为了简单起见，本节考虑如下散度形式的椭圆算子
+\begin{equation}
+    \mathcal{L}u = -\sum_{i,j=1}^n \dfrac{\partial}{\partial x_i} \left( a_{ij}(x) \dfrac{\partial u}{\partial x_j} \right) ,
+\end{equation}
+其中$ a_{ij}\in C^\infty(\overline{U}) $，$ a_{ij} = a_{ji} $，于是$ \mathcal{L} $是对称的。另外，要求$ \mathcal{L} $满足一致椭圆性条件，该条件以及对称性保证了$ \mathcal{L} $的特征值都是正的实数。在这种情况下，$ \mathcal{L} $对应的双线性形式是对称的，即$ a(u,v) = a(v,u) $。
+
+\begin{theorem}
+    考虑有界连通开集$ U $上的对称椭圆算子$ \mathcal{L} $，则如下命题成立：
+    \begin{enumerate}
+        \item $ \mathcal{L} $有至多可列个特征值，并且所有特征值都是正实数；
+        \item 可以计入重数将$ \mathcal{L} $的特征值从小到大排列为$ \Lambda = \{\lambda_k\}_{k=1}^\infty $，即$ 0<\lambda_1\leqslant \lambda_2\leqslant \cdots $，并且$ \lambda_k\to +\infty $；
+        \item 存在$ L^2(U) $的一组正交基$ \{w_k\}_{k=1}^\infty $，其中的$ w_k\in H^1_0(U) $都是$ \mathcal{L} $的特征值为$ \lambda_k $对应的特征函数；
+    \end{enumerate}
+    称最小的特征值$ \lambda_1 $为$ \mathcal{L} $的\textcolor{blue}{基本特征值}（principal eigenvalue）。
+\end{theorem}
+
+在数学物理中，椭圆算子$ \mathcal{L} $的特征值分布是一个重要的问题。当$ \mathcal{L} = -\Delta $且$ U $是具有光滑边界的有界开集时，Weyl定律给出了特征值的渐进分布，即
+\begin{equation}
+    \lim_{k\to\infty} \dfrac{\lambda_k^{n / 2}}{k} = \frac{(2\pi)^n}{|U|\alpha(n)},
+\end{equation}
+其中$ |U| $是$ U $的体积，$ \alpha(n) $是$ \mathbb{R}^n $内单位球的体积。
+
+\begin{theorem}
+    考虑有界连通开集$ U $上的对称椭圆算子$ \mathcal{L} $，则如下命题成立：
+    \begin{enumerate}
+        \item 基本特征值$ \lambda_1 = \min \{a(u,u)| u\in H^1_0(U),\ \| u \|_{L^2(U)} = 0\} $，即Rayleigh商公式成立：
+        \begin{equation}
+            \lambda_1 = \min_{u\in H^1_0(U) - \{0\}} \frac{a(u,u)}{\| u \|_{L^2(U)}^2}.
+        \end{equation}
+        \item 存在特征函数$ w_1 $，它在$ U $内的函数值为正且使得$ \lambda_1 = a(w_1,w_1) $；
+        \item 如果$ u\in H^1_0(U) $是
+        \[
+            \begin{aligned}
+                \mathcal{L}u &= \lambda_1 u, \quad x\in  U,\\
+                u &= 0, \quad x\in \partial U
+            \end{aligned}
+        \]
+        的弱解，则存在常数$ r $使得$ u = rw_1 $，于是$ \lambda_1 $的重数为$ 1 $，即
+        \begin{equation}
+            0 < \lambda_1 \textcolor{red}{<} \lambda_2\leqslant \lambda_3\leqslant \cdots.
+        \end{equation}
+    \end{enumerate}
+\end{theorem}
+
+\subsubsection{非对称椭圆算子}
+考虑非散度形式的一般非对称椭圆算子
+\[
+    \mathcal{L}u = -\sum_{i,j=1}^n a_{ij}(x) \dfrac{\partial^2 u}{\partial x_i \partial x_j} + \sum_{i=1}^n b_i(x) \dfrac{\partial u}{\partial x_i} + c(x)u,
+\]
+令$ a_{ij},b_j,c\in C^\infty(\overline{U}) $，其中$ U $是有界连通开集，并且$ a_{ij} = a_{ji} $，在$ U $上$ c\geqslant 0 $。我们有如下定理。
+\begin{theorem}
+    考虑有界连通开集$ U $上的非对称椭圆算子$ \mathcal{L} $，则如下命题成立：
+    \begin{enumerate}
+        \item $ \mathcal{L} $的零边值问题具有实的基本特征值$ \lambda_1 $，如果$ \lambda $是其他特征值，则
+        \begin{equation}
+            {\rm Re}(\lambda) \geqslant \lambda_1.
+        \end{equation}
+        \item 存在$ \lambda_1 $相应的在$ U $内的函数值为正的特征函数$ w_1 $；
+        \item 如果$ u\in H^1_0(U) $是
+        \[
+            \begin{aligned}
+                \mathcal{L}u &= \lambda_1 u, \quad x\in  U,\\
+                u &= 0, \quad x\in \partial U
+            \
+            \end{aligned}
+        \]
+        的弱解，则存在常数$ r $使得$ u = rw_1 $，即$ \lambda_1 $的重数为$ 1 $。
+    \end{enumerate}
+\end{theorem}
+
+\end{document}

@@ -18,4 +18,76 @@
 \end{itemize}}
 本文主要讨论偏微分方程组的适定性理论，不涉及对数值方法的分析，仅仅考虑问题本身的性质，内容对应TDPDM的第四章。
 
+粗略地来说，所谓适定性是指问题的解同时满足：
+\begin{itemize}
+    \item 存在性；
+    \item 唯一性；
+    \item 稳定性：解连续依赖于输入数据。
+\end{itemize}
+对于偏微分方程组的初值问题
+\begin{equation}\label{eq:pde}
+    \begin{cases}
+        u_t = F(u,x,t), &x\in\Omega, t>0,\\
+        u(x,0) = f(x), &x\in\Omega,
+    \end{cases}
+\end{equation}
+其中$ u = u(x,t) $是未知函数，$ \Omega $是定义域，$ F $是给定的函数，$ f $是给定的初值函数。我们希望该问题的解$ u(x,t) $的能量（某范数）可以被初值控制，即
+\[
+    \| u(\cdot,t) \| \leqslant K \| u(\cdot,0) \| = K \| f \| ,\quad t>0,
+\]
+此时如果对初值进行扰动，令$ f_\varepsilon = f + \varepsilon g $，则对应的解$ u_\varepsilon $满足
+\[
+    \| u_\varepsilon(\cdot,t) - u(\cdot,t) \| \leqslant K \| g \|,  
+\]
+因此数值误差可以被初值误差控制，此时该问题的解连续依赖于初值，所以满足稳定性条件（与差分格式的稳定性是不同概念）。不过一般而言，解无法仅通过常数因子用初值控制，例如考虑带有零阶导数项的方程$ u_t=u $，此时解的范数可能会随时间增长，因此我们需要引入指数增长因子，即
+\begin{equation}
+    \| u(\cdot,t) \| \leqslant Ke^{\beta t} \| f \|, \quad t>0.
+\end{equation}
+
+\section{线性偏微分方程的适定性}
+本节考虑线性偏微分方程方程组
+\begin{equation}\label{eq:lpde}
+    u_t = P( x,t,\dfrac{\partial }{\partial x})u 
+\end{equation}
+的适定性问题，其中$ P $是线性微分算子
+\begin{equation}
+    P(x,t,\dfrac{\partial }{\partial x}) = \sum_{|\alpha|\leqslant p} A_\alpha(x,t) \left( \dfrac{\partial }{\partial x^{(1)}}  \right)^{\alpha_1} \cdots \left( \dfrac{\partial }{\partial x^{(n)}}  \right)^{\alpha_n},
+\end{equation}
+其中$ \alpha = (\alpha_1,\cdots,\alpha_n) $是多重指标，$ |\alpha| = \alpha_1 + \cdots + \alpha_n $，$ A_\alpha(x,t) $是给定的$ m\times m $阶矩阵值函数。要求$ A_\alpha\in C^\infty $，并且考虑在各个空间变量上都具有$ 2\pi $周期边界条件的初值问题，现在给出这一问题的适定性的定义。
+\begin{definition}
+    考虑偏微分方程\eqref{eq:lpde}的在$ 2\pi $周期边界条件下的初值问题。如果对于任意给定的初值$ f\in C^\infty $，如下两个条件成立：
+    \begin{enumerate}
+        \item 存在唯一解$ u\in C^\infty(x,t) $，该解是以$ 2\pi $为周期的周期函数；
+        \item 存在常数$ \beta,K $，使得对于任意$ t>0 $，有
+        \begin{equation}\label{eq:wellposed}
+            \| u(\cdot,t) \| \leqslant Ke^{\beta t} \| f \|,
+        \end{equation}
+        则称该问题是适定的。如果问题不适定，则称其为病态的。
+    \end{enumerate}
+\end{definition}
+
+根据Parseval定理，$ \| u(x,t) \|_2 = \| \hat{u}(\omega,t) \|_2 $，因此可以使用Fourier变换来研究问题的适定性，将简谐波解
+\begin{equation}
+    u(x,t) = \hat{u}(\omega,t)e^{i \omega x}
+\end{equation}
+代入给定的方程\eqref{eq:lpde}可以得到$ \hat{u}(\omega,t) $与$ \hat{u}(\omega,0)=\hat{f} $之间的关系，借助这两者之间增长的关系可以判断问题的适定性。
+
+\begin{example}
+    考虑具有周期性边界的二维扩散方程$ u_t = \kappa\Delta u $的初值问题，令$ u(x,t) = \hat{u}(\omega,t)e^{i \omega\cdot x} $，$ \omega,x $都是二维向量，代入方程可以得到
+    \[
+        \hat{u}_t(\omega,t) = -\kappa |\omega|^2 \hat{u}(\omega,t),
+    \]
+    这是一个常微分方程，初值为$ \hat{u}(\omega,0) = \hat{f}(\omega) $，于是
+    \begin{equation}
+        \hat{u}(\omega,t) = \hat{f}(\omega)e^{-\kappa |\omega|^2 t}.
+    \end{equation}
+    因此
+    \[
+        \| u(\cdot,t) \|_2 = \| \hat{u}(\omega,t) \|_2 = \| \hat{f}(\omega) \|_2 e^{-\kappa |\omega|^2 t} = \| f \|_2 e^{-\kappa |\omega|^2 t},
+    \]
+    为了使得\eqref{eq:wellposed}成立，需要$ \beta = -\kappa |\omega|^2 $关于$ \omega\in \mathbb{R} $有上界，因此为了保证适定性需要要求$ \kappa >0 $。
+\end{example}
+
+在上面的例子中，尽管当问题具有$ 2\pi $周期性边界时可以只考虑$ \omega\in [-\pi,\pi] $的简谐波，然而对于数值计算而言，舍入误差的存在使得计算时几乎总是会出现高频分量，因此有必要考虑所有的$ \omega\in \mathbb{R} $，要求任意可能的$ \omega $下的$ \beta $都有上界。
+
 \end{document}

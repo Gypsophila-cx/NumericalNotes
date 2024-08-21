@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  10 AUG 2024 01:15
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  10 AUG 2024 02:52
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -1173,19 +1173,33 @@ Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
 Package pdflscape Info: Auto-detected driver: dvipdfm (xetex) on input line 98.
 ))
 \c@lstlisting=\count402
+LaTeX Font Info:    Trying to load font information for U+rsfs on input line 28.
+ (d:/Latex/texlive/2023/texmf-dist/tex/latex/jknapltx/ursfs.fd
+File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
+)
+LaTeX Font Info:    Trying to load font information for U+msa on input line 28.
+ (d:/Latex/texlive/2023/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 28.
+ (d:/Latex/texlive/2023/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+LaTeX Font Info:    Font shape `TU/SimSun(0)/m/sl' in size <10> not available
+(Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 64.
  [1
 
-] (./PDES.aux)
+] [2] (./PDES.aux)
 Package rerunfilecheck Info: File `PDES.out' has not changed.
-(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
+(rerunfilecheck)             Checksum: CF9C9DC145624BB3F21BCC05BC304DA8;131.
  ) 
 Here is how much of TeX's memory you used:
- 40610 strings out of 476683
- 881933 string characters out of 5804929
- 1856012 words of memory out of 5000000
- 60149 multiletter control sequences out of 15000+600000
- 515898 words of font info for 64 fonts, out of 8000000 for 9000
+ 40780 strings out of 476683
+ 887780 string characters out of 5804929
+ 1878012 words of memory out of 5000000
+ 60275 multiletter control sequences out of 15000+600000
+ 522945 words of font info for 97 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 119i,5n,121p,493b,338s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 119i,7n,121p,493b,601s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on PDES.pdf (1 page).
+Output written on PDES.pdf (2 pages).
