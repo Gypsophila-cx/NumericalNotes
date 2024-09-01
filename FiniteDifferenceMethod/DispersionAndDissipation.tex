@@ -28,11 +28,15 @@
 \begin{equation}\label{eq:explict}
     u^{(n+1)}_j = \sum_{s=-l}^r \alpha_s u^{(n)}_{j+s},
 \end{equation}
-其中$ \alpha_s $是给定的差分系数。对于一维对流方程$ u_t+au_t=0 $而言，直接做Taylor展开可知该格式与原方程相容当且仅当
+其中$ \alpha_s $是给定的差分系数。对于一维对流方程$ u_t+au_t=0 $而言，直接关于点$ (x_j,t_n) $做Taylor展开可知
+\[
+    \Delta t\cdot \tau = (1 - \sum_{s=-l}^r \alpha_s)u - (a \Delta t + \sum_{s=-l}^r s \alpha_s)u_x + (\frac{1}{2}\Delta t^2 a^2 - \frac{1}{2}\sum_{s=-l}^r \alpha_s \Delta x^2 s^2)u_{xx} + O(\Delta t^3) + O(\Delta x^3),
+\]
+于是该格式与原方程相容当且仅当
 \begin{equation}
     \sum_{s=-l}^r \alpha_s = 1, \quad \sum_{s=-l}^r \alpha_s s = -a \frac{\Delta t}{\Delta x},
 \end{equation}
-并且当$ a<0 $时，该格式具有$ L^2 $稳定性时可以到达的截断误差最高阶数为
+此时截断误差阶数至少为1阶。另外，当$ a<0 $时，该格式具有$ L^2 $稳定性时可以到达的截断误差最高阶数为
 \begin{equation}
     p = \min(l+r,2l+2,2r),
 \end{equation}
@@ -63,7 +67,139 @@
 \begin{theorem}{\normalfont\bf{Godunov}}
     如果差分格式是单调的，则它至多具有一阶局部截断误差。
 \end{theorem}
+\begin{proof}
+    根据之前的分析，当\eqref{eq:explict}相容时需要满足
+    \[
+        \sum_{s=-l}^r \alpha_s = 1, \quad \sum_{s=-l}^r \alpha_s s = -a \frac{\Delta t}{\Delta x},
+    \]
+    此时截断误差的满足
+    \[
+        \Delta t \cdot \tau = (\frac{1}{2}\Delta t^2 a^2 - \frac{1}{2}\sum_{s=-l}^r \alpha_s \Delta x^2 s^2)u_{xx} + O(\Delta t^3) + O(\Delta x^3),
+    \]
+    根据单调格式的等价定义，差分系数$ \alpha_s \geqslant 0 $，于是根据Cauchy-Schwarz不等式有
+    \[
+        a^2 r^2 = (\sum_{s=-l}^r \alpha_s s)^2 \leqslant (\sum_{s=-l}^r \alpha_s s^2)(\sum_{s=-l}^r \alpha_s) = \sum_{s=-l}^r \alpha_s s^2,
+    \]
+    上式当且仅当$ (-l\sqrt{\alpha_{-l}},\cdots ,r \sqrt{\alpha_r}) $与$ (\sqrt{\alpha_{-l}},\cdots ,\sqrt{\alpha_r}) $共线时取等号，此时系数$ \alpha_s $只能有一个是非零的进而等于1，这样的差分格式不具有实际意义，因此对于有实际意义的差分格式，上式不取等，进而$ \tau = O(\Delta t) + O(\Delta x^2 / \Delta t) $，其局部截断误差至多为一阶。
+\end{proof}
 这一事实意味着高阶相容的线性格式不可能是单调的，因此难以避免数值振荡，为了解决这一问题，我们需要寻找不具有单调性却又能避免数值振荡的差分格式。
+
+\subsection{非线性双曲守恒律}
+考虑一维非线性双曲守恒律：
+\begin{equation}
+    u_t + f(u)_x = 0,
+\end{equation}
+这类问题的解往往比线性双曲守恒律复杂得多，可能出现间断解和激波，为了控制数值解的振荡，有必要要求差分格式可以保证数值解的单调性。对于这类非线性问题，我们主要关心它的守恒性格式，即
+\begin{definition}
+    如果某种差分格式形如
+    \begin{equation}
+        u^{(n+1)}_j = u^{(n)}_j - \frac{\Delta t}{\Delta x} [F^{(n)}_{j+\frac{1}{2}} - F^{(n)}_{j-\frac{1}{2}}],
+    \end{equation}
+    其中
+    \begin{equation}
+        F^{(n)}_{j+\frac{1}{2}} = F(u_{j-l+1}^{(n)}, \cdots ,u_{j+r}^{(n)})
+    \end{equation}
+    称作数值通量，满足如下要求：
+    \begin{enumerate}
+        \item Lipschitz条件（控制舍入误差的影响）：$ F $关于各个变元都是局部Lipschitz连续的；
+        \item 相容性条件（保证格式与问题相容）：$ F(p,p,\cdots ,p) = f(p) $；
+    \end{enumerate}
+    则称该差分格式为守恒性格式。
+\end{definition}
+相比于非守恒形式，守恒型差分格式可以满足局部守恒性质，即
+\begin{equation}
+    \sum_{j=p}^q u^{(n+1)}_j = \sum_{j=p}^q u^{(n)}_j - \frac{\Delta t}{\Delta x} [F^{(n)}_{q+\frac{1}{2}} - F^{(n)}_{p-\frac{1}{2}}],
+\end{equation}
+进而可以较好的刻画间断解和激波。
+
+最简单的数值通量函数是仅依赖于左右网格点值的两点型数值通量
+\[
+    F^{(n)}_{j+\frac{1}{2}} = F(u_j^{(n)},u_{j+1}^{(n)}).  
+\]
+
+关于守恒型差分格式的数值收敛性，有著名的Lax-Wendroff定理：当守恒型差分格式与双曲守恒律相容时，如果网格尺度趋于零时数值解几乎处处有界且收敛到某个函数，则该极限必定是问题的弱解。
+
+\subsection{单调格式和单调保持格式}
+对于非线性双曲守恒律，守恒型格式在某种程度上确保了数值解收敛到弱解，但是类似于线性的行波方程，高阶相容和数值振荡的矛盾依然存在。因为双曲守恒律的熵解具有单调保持性质：当初值单调时，熵解具有同样的单调性，所以为了消除数值振荡，我们希望使用的守恒型格式也可以保持解的单调性，为此我们定义所谓的单调保持性质：
+\begin{definition}
+    给定单调的初值条件，要求离散得到的数值初值是单调的，如果差分格式给出的任意时刻的数值解都具有与数值初值一样的单调性，则称该差分格式是单调保持格式。
+\end{definition}
+然而这一性质很难验证，注意到相比于单调保持性质，熵解具有更强的比较性质，即考虑两个不同的初值$ u(x,0) $和$ v(x,0) $，如果对任意的$ x $都有$ u(x,0)\geqslant v(x,0) $，则对任意的$ t>0 $都有$ u(x,t)\geqslant v(x,t) $，因此我们希望数值解具有类似的比较性质，即
+\[
+    u^{(n)}_j\geqslant v^{(n)}_j \implies u^{(n+1)}_j\geqslant v^{(n+1)}_j,  
+\]
+具有这种性质的格式称为单调格式，事实上，该刻画等价于如下定义：
+\begin{definition}
+    设$ l $和$ r $是给定的左右臂长，如果数值格式
+    \begin{equation}
+        u_j^{(n=1)} = H(u_{j-l}^{(n)},\cdots ,u_{j+r}^{(n)})
+    \end{equation}
+    中的函数$ H $关于每个变元都是单调不减的，则称该差分格式是单调格式。
+\end{definition}
+对于线性格式，单调性和单调保持性是等价的，但是对于非线性格式，单调性和单调保持性是不同的两个概念，一般地，使用如上等价定义可知
+\[
+    u_j^{(n)} \geqslant u_{j-1}^{(n)}\quad \forall j \implies u_j^{(n+1)} \geqslant u_{j-1}^{(n+1)}\quad \forall j,
+\]
+因此单调格式必然是单调保持格式，但是反之不一定成立。
+
+可以证明单调格式的数值解一致有界，且收敛到双曲守恒律的熵解。
+然而对于单调格式而言，Godunov定理依然成立，即相容的单调格式至多具有一阶局部截断误差，因此单调格式不具有高阶相容性。
+
+\subsection{TVD格式}
+由于单调格式存在无法获得高阶相容性的确定，为了提高格式的精度，我们需要做出一些妥协，允许出现轻微的数值振荡，并且希望这种振荡随着网格加密可以逐渐消失。为了量化数值解的振荡强弱，我们引入网格函数的全变差的概念。
+\begin{definition}
+    如果$ w:j\mapsto w_j $是一个网格函数，则称
+    \begin{equation}
+        {\rm TV}(w) = \sum_{j} |w_{j+1} - w_j|
+    \end{equation}
+    为$ w $的全变差。
+\end{definition}
+
+根据PDE理论，双曲守恒律的熵解的全变差不随时间增加，因此我们希望差分格式的数值解的全变差也不随时间增加，由此引入了TVD格式的概念：
+\begin{definition}
+    如果某差分格式的数值解满足
+    \begin{equation}
+        {\rm TV}(u^{(n+1)}) \leqslant {\rm TV}(u^{(n)}),
+    \end{equation}
+    则该差分格式是全变差不增的，称为TVD格式（Total Variation Diminishing）。
+\end{definition}
+
+最常用的判断差分格式是TVD格式的方法是Harten引理：
+\begin{lemma}{\normalfont\bf{Harten}}
+    设差分格式形如以下增量形式
+    \begin{equation}
+        u_j^{(n+1)} = u_j^{(n)} + C_{j+\frac{1}{2}}^+ (u_{j+1}^{(n)} - u_j^{(n)}) - C_{j-\frac{1}{2}}^- (u_j^{(n)} - u_{j-1}^{(n)}),
+    \end{equation}
+    如果
+    \begin{equation}
+        C_{j+\frac{1}{2}}^+ \geqslant 0, \quad C_{j-\frac{1}{2}}^- \geqslant  0, \quad C_{j+\frac{1}{2}}^+ + C_{j-\frac{1}{2}}^- \leqslant 1,
+    \end{equation}
+    则该差分格式是TVD格式。
+\end{lemma}
+\begin{proof}
+    直接计算可得
+    \[
+        u_{j+1}^{(n+1)} - u_{j}^{(n+1)} = (1-C_{j+\frac{1}{2}}^+ - C_{j+\frac{1}{2}}^-) (u_{j+1}^{(n)} - u_{j}^{(n)}) + C_{j+\frac{3}{2}}^+(u_{j+2}^{(n)} - u_{j+1}^{(n)}) - C_{j-\frac{1}{2}}^-(u_{j}^{(n)} - u_{j-1}^{(n)}),
+    \]
+    使用三角不等式并重新排列求和指标可知
+    \[
+    \begin{aligned}
+        \sum_j |u_{j+1}^{(n+1)} - u_{j}^{(n+1)}| 
+        &\leqslant \sum_j (1-C_{j+\frac{1}{2}}^+ - C_{j+\frac{1}{2}}^-)|u_{j+1}^{(n)} - u_{j}^{(n)}| + \sum_j C_{j+\frac{3}{2}}^+|u_{j+2}^{(n)} - u_{j+1}^{(n)}| + \sum_j C_{j-\frac{1}{2}}^-|u_{j}^{(n)} - u_{j-1}^{(n)}| \\
+        &= \sum_j (1-C_{j+\frac{1}{2}}^+ - C_{j+\frac{1}{2}}^-)|u_{j+1}^{(n)} - u_{j}^{(n)}| + \sum_j C_{j+\frac{1}{2}}^+|u_{j+1}^{(n)} - u_{j}^{(n)}| + \sum_j C_{j+\frac{1}{2}}^-|u_{j+1}^{(n)} - u_{j}^{(n)}|\\
+        &= \sum_j |u_{j+1}^{(n)} - u_{j}^{(n)}|,
+    \end{aligned} 
+    \]
+    所以
+    \[
+        {\rm TV}(u^{(n+1)})  \leqslant {\rm TV}(u^{(n)}),
+    \]
+    从而该差分格式是TVD格式。
+\end{proof}
+
+使用Harten引理证明某格式是TVD格式的关键在于将数值格式改写为合适的增量形式。
+
+可以证明单调格式都是TVD格式，而TVD格式都是单调保持格式，但是反之不一定成立，TVD格式不一定是单调格式，单调保持格式也不一定是TVD格式。不过对于线性格式，单调性、单调保持性质和TVD性质是等价的。
 
 \section{耗散性与色散性}
 现在开始考虑差分格式的耗散性和色散性。如之前所述，希望差分格式具有和原方程相同的耗散性和色散性，以便更好地刻画原方程的解，为此首先需要研究原方程的耗散性和色散性，之后再讨论差分格式的耗散性和色散性。

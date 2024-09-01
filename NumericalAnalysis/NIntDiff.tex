@@ -1,0 +1,469 @@
+\documentclass[a4paper,10pt]{ctexart}
+\input{macros}
+\usepackage{booktabs}
+
+\begin{document}
+\hfill\vbox{\hbox{Numerical Analysis}\hbox{陈曦，HOME}\hbox{Summer, 2024}}
+
+\begin{center}\Large
+    \textbf{数值分析}\\{\normalsize\bf {数值积分和数值微分}}
+\end{center}
+\vskip 30pt
+\small {参考书目：
+\begin{itemize}
+    \item Numerical Analysis（David Kincaid, Ward Cheney）
+    \item Numerical Analysis（Timothy Sauer，2014）
+    \item Approximation Theory and Approximation Practice（Trefethen，2013）
+\end{itemize}}
+\vskip 30pt
+
+\section{数值微分}
+最常见的数值微分是直接差分法。如果记$ D_+ $为前向差分算子，后向差分算子为$ D_- $，中心差分算子为$ D_0 $，即
+\[
+    D_+u(t) = \frac{u(t+h)-u(t)}{h},\quad D_-u(t) = \frac{u(t)-u(t-h)}{h},\quad D_0u(t) = \frac{u(t+h)-u(t-h)}{2h},
+\]
+则它们都可以用来近似$ u'(t) $，使用带余项的Taylor展开可以看到
+\[
+    D_+ u(t) = u'(t) + \frac{h}{2}u''(\xi_+) ,\quad D_- u(t) = u'(t) + \frac{h}{2}u''(\xi_-),\quad D_0 u(t) = u'(t) + \frac{h^2}{6}u'''(\xi_0),
+\]
+所以前两种单侧差分是一阶的，中心差分是二阶的。为了近似更高阶的导数，我们可以使用更高阶的差分算子，例如
+\[
+    D_+D_-u(t) = \frac{u(t+h)-2u(t)+u(t-h)}{h^2} = u''(t) + \frac{h^2}{12}u^{(4)}(\xi)
+\]
+是二阶中心差分，具有二阶精度；类似地，使用待定系数法，考虑
+\[
+    \sum_{k=-l}^r a_k u(t+kh) = u^{(n)}(t) + O(h^n),
+\]
+将左侧使用Taylor展开，令两侧各阶系数相等可以求出$ a_k $的值。另外，给出两个常用的单侧差分算子：
+\[
+    \frac{3u(t)-4u(t+h)+u(t+2h)}{-2h} = u'(t) + O(h^2),\quad \frac{u(t-2h)-4u(t-h)+3u(t)}{2h} = u'(t) + O(h^2).
+\]
+
+\subsection{插值型微分}
+借助多项式插值，我们可以得到一大类数值微分方法，这类方法称为插值型微分，其基本思想是先使用多项式对原函数进行插值，之后使用该插值多项式的导数来近似原函数的导数。当使用Lagrange插值时，回忆其满足
+\begin{equation}
+    f(x) = \sum_{i=0}^n f(x_i) \ell_i(x) + \frac{f^{(n+1)}(\xi_x)}{(n+1)!} \prod_{i=0}^n (x-x_i),
+\end{equation}
+其中$ \ell_i(x) $是Lagrange插值基函数$ \prod_{j\ne i} (x-x_j) / (x_i-x_j) $。对上式的两侧求导可得
+\begin{equation}
+    f'(x) = \sum_{i=0}^n f(x_i) \ell_i'(x) + \frac{f^{(n+1)}(\xi_x)}{(n+1)!} \frac{d}{dx}\prod_{i=0}^n (x-x_i) + \frac{1}{(n+1)!} \prod_{i=0}^n (x-x_i)\frac{d}{dx}f^{(n+1)}(\xi_x).
+\end{equation}
+考虑该近似在某插值节点$ x_k $上的值，则
+\begin{equation}
+    f'(x_k) = \sum_{i=0}^n f(x_i) \ell_i'(x_k) + \frac{f^{(n+1)}(\xi_{x_k})}{(n+1)!} \frac{d}{dx}\prod_{i=0}^n (x-x_i)|_{x=x_k},
+\end{equation}
+因为
+\[
+    \frac{d}{dx}\prod_{i=0}^n (x_k-x_i) = \sum_{i=0}^n \prod_{j\ne i} (x_k-x_j) = \prod_{j\ne k} (x_k-x_j),
+\]
+所以插值型微分的误差为
+\begin{equation}
+    f'(x_k) - \sum_{i=0}^n f(x_i) \ell_i'(x_k) = \frac{f^{(n+1)}(\xi_{x_k})}{(n+1)!} \prod_{j\ne k} (x_k-x_j).
+\end{equation}
+
+\subsection{Richardson外推法}
+注意到数值微分的误差往往形如
+\[
+    C h^n + O(h^{n+1}),
+\]
+其中$ C $是与$ h $无关的常数，因此我们可以使用外推法来提高精度，具体来说，我们可以使用两个不同的步长$ h_1 $和$ h_2 $，得到两个近似值$ u_1 $和$ u_2 $，将他们进行线性组合以消去误差中的主要部分从而提高数值精度。一般地，对于一个相容的数值微分方法我们有
+\begin{equation}
+    Lu = \varphi(h) + a_1 h + a_2 h^2 + a_3 h^3 + a_4 h^4 + \cdots,
+\end{equation}
+其中$ L $是差分算子，$ \varphi(h) $是使用$ u $在某些节点处的值组合得到的数值微分，$ h $是步长，剩余的部分是误差项。为了消除一阶误差项，分别使用$ h $和$ h/2 $的步长得到两个近似值$ u_1 $和$ u_2 $，则
+\[
+    \begin{aligned}
+        L u 
+        &= \varphi(h) + a_1 h + a_2 h^2 + a_3 h^3 + a_4 h^4 + \cdots,\\
+        &= \varphi(h/2) + a_1 h/2 + a_2 h^2/4 + a_3 h^3/8 + a_4 h^4/16 + \cdots,
+    \end{aligned}
+\]
+将第二行乘二并减去第一行，可以得到
+\[
+    Lu = 2\varphi(h / 2) - \varphi(h) - \frac{a_2}{2}h^2 - \frac{3a_3}{4}h^3 + \cdots,
+\]
+因此$ 2\varphi(h / 2) - \varphi(h) $是一个具有二阶截断误差的更高精度的数值微分。
+
+以上方法称为Richardson外推法，重复使用它可以提高数值微分的精度。$ M $步的Richardson外推法在每步分为两个阶段：
+\begin{enumerate}
+    \item 选取合适的步长$ h $并计算前$ M+1 $个数值近似值，并记为
+    \begin{equation}
+        D(n,0) = \varphi(h / 2^n),\quad n=0,1,\cdots,M.
+    \end{equation}
+    \item 逐项消去高阶误差项，使用以下递推公式计算$ D(n,k) $：
+    \begin{equation}
+        D(n,k) = \frac{2^k}{2^k-1}D(n,k-1) - \frac{1}{2^k-1}D(n-1,k-1),
+    \end{equation}
+    其中$ n=k,\cdots,M $，$ k=1,2,\cdots,n $。
+\end{enumerate}
+使用数学归纳法可知按照以上方法得到的$ D(n,k) $具有$ k+1 $阶截断误差。
+
+当使用中心差分时，误差中不含有奇数次的项，因此我们可以将第二个阶段中的递推关系改为
+\begin{equation}
+    D(n,k) = \frac{4^k}{4^k-1}D(n,k-1) - \frac{1}{4^k-1}D(n-1,k-1),
+\end{equation}
+此时$ D(n,k) $的截断误差阶数为$ 2(k+1) $。
+
+通常Richardson外推法的计算借助于以下的表格：
+\begin{center}
+    \begin{tabular}{cccccc}
+        \toprule
+        $ D(0,0) $ & & & & & \\
+        $ D(1,0) $ & $ D(1,1) $ & & & & \\
+        $ D(2,0) $ & $ D(2,1) $ & $ D(2,2) $ & & & \\
+        $ \vdots $ & $ \vdots $ & $ \vdots $ & $ \ddots $ & & \\
+        $ D(M,0) $ & $ D(M,1) $ & $ D(M,2) $ & $ \cdots $ & $ D(M,M) $ & \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+每次计算$ D(n,k) $时需要使用$ D(n,k-1) $和$ D(n-1,k-1) $，因此可以从左上角开始逐列计算。
+
+\section{数值积分}
+数值积分可以视作数值微分的逆运算，其目的是计算定积分
+\[
+    I = \int_a^b f(x)dx.
+\]
+最简单的积分方法包括矩形法、梯形法和Simpson法则，这些方法都是插值型积分方法的特例。所谓插值型积分方法是指先对被积函数进行多项式插值，之后对插值多项式进行积分。当使用Lagrange插值时，我们有
+\[
+    f(x) = \sum_{i=0}^n f(x_i) \ell_i(x) + \frac{f^{(n+1)}(\xi_x)}{(n+1)!} \prod_{i=0}^n (x-x_i),
+\]
+两侧同时积分可得
+\[
+    \int_a^b f(x)dx = \sum_{i=0}^n f(x_i) \int_a^b \ell_i(x)dx + \frac{f^{(n+1)}(\xi_x)}{(n+1)!} \int_a^b \prod_{i=0}^n (x-x_i)dx,
+\]
+记其中与$ f $无关的
+\begin{equation}
+    \int_a^b \ell_i(x)dx :=A_i,
+\end{equation}
+则$ f $的插值型数值积分可以表示为
+\begin{equation}
+    \sum_{i=0}^n A_i f(x_i) ,
+\end{equation}
+相应的数值误差为
+\begin{equation}
+    \int_a^b\frac{f^{(n+1)}(\xi_x)}{(n+1)!} \prod_{i=0}^n (x-x_i)dx,
+\end{equation}
+使用绝对值不等式可得
+\begin{equation}
+    \left\vert \int_a^b\frac{f^{(n+1)}(\xi_x)}{(n+1)!} \prod_{i=0}^n (x-x_i)dx \right\vert \leqslant  \frac{M}{(n+1)!} \int_a^b \prod_{i=0}^n \vert x-x_i \vert dx,
+\end{equation}
+其中$ M = \max_{x\in [a,b]}f^{(n+1)}(x) $。
+
+与连续空间上的最佳逼近类似，我们希望最小化上述误差，为此需要寻找合适的插值节点$ x_i $，这一问题可以转化为如下最优化问题：
+\begin{equation}
+    \min_{x_0,\cdots ,x_n}\int_a^b \prod_{i=0}^n \vert x-x_i \vert dx,
+\end{equation}
+可以证明在$ [a,b] = [-1,1] $时，当且仅当$ x_0,\cdots ,x_n $是第二类Chebyshev点，即第二类Chebyshev多项式$ U_{n+1}(x) = \sin[(n+2)\arccos x] / \sin (\arccos x) $的零点时上式取到最小值$ 2^{-n} $，即
+\begin{equation}
+    \int_{-1}^1 \prod_{i=0}^n \vert x-x_i \vert dx = 2^{-n},
+\end{equation}
+相应的插值点，即第二类Chebyshev点为
+\begin{equation}
+    x_i = \cos\left(\frac{i+1}{n+2}\pi\right),\quad i=0,1,\cdots ,n.
+\end{equation}
+于是我们有如下误差估计：
+\begin{equation}
+    \left\vert \int_{-1}^1 f(x)dx - \sum_{i=0}^n A_i f(x_i) \right\vert \leqslant \frac{M}{2^{n}(n+1)!}.
+\end{equation}
+
+当区间为一般的$ [a,b] $时，使用坐标变换
+\[
+    x = \frac{b-a}{2}t + \frac{a+b}{2}
+\]
+可以将区间变换到$ [-1,1] $上，此时插值型积分的误差为
+\begin{equation}
+    \left\vert \int_a^b f(x)dx - \sum_{i=0}^n A_i f(x_i) \right\vert\leqslant \frac{M}{(n+1)!} \int_{-1}^1 \prod_{i=0}^n \frac{b-a}{2}\vert t-t_i \vert\cdot \frac{b-a}{2}dt \leqslant \frac{M}{2^{n}(n+1)!}\cdot (\frac{b-a}{2})^{n+2}.
+\end{equation}
+
+\subsection{Newton-Cotes公式}
+如果不追求特别高的精度，等距节点的插值点是最简单的选择，相应的插值型积分方法称为Newton-Cotes插值。最简单的Newton-Cotes公式是矩形法、梯形法和Simpson法则，它们分别对应于$ n=0,1,2 $的情形。对于$ n=0 $的情形，我们有
+\begin{equation}
+    \int_a^b f(x)dx \approx f(a)(b-a) \text{ or } f(b)(b-a),
+\end{equation}
+也可以使用中点法，即
+\begin{equation}
+    \int_a^b f(x)dx \approx f(\frac{a+b}{2})(b-a).
+\end{equation}
+这种情况下我们只使用一个插值点$ x_0=a,b $或者$ (a+b) / 2 $。根据插值型积分的误差估计可知$ x_0=a,b $时方法的误差为
+\[
+    f'(\xi) \int_a^b (x-x_0) dx = \pm \frac{f'(\xi)}{2}(b-a)^2,
+\]
+不过当使用中点法时，由于正负误差恰好相互抵消，误差阶数上升为$ O((b-a)^3) $。
+
+对于$ n=1 $的情形，我们有
+\begin{equation}
+    \int_a^b f(x)dx = \frac{f(a)+f(b)}{2}(b-a) + O((b-a)^3),
+\end{equation}
+注意到当$ x_0=a,x_1=b $时，Lagrange插值基函数为
+\[
+    \ell_0(x) = \frac{x-b}{a-b},\quad \ell_1(x) = \frac{x-a}{b-a},
+\]
+计算$ A_0,A_1 $可得
+\[
+    A_0 = \int_a^b \ell_0(x)dx = \frac{b-a}{2},\quad A_1 = \int_a^b \ell_1(x)dx = \frac{b-a}{2},
+\]
+所以我们有
+\[
+    \int_a^b f(x)dx \approx A_0 f(x_0) + A_1 f(x_1) =  \frac{f(a)+f(b)}{2}(b-a),
+\]
+由此可见梯形法则是$ n=1 $的Newton-Cotes公式。根据之前的分析可知
+\[
+    \int_a^b f(x)dx - \frac{f(a)+f(b)}{2}(b-a) = \int_a^b \frac{f''(\xi_x)}{2} (x-a)(x-b) dx = \frac{f''(\xi)}{2} \int_a^b (x-a)(x-b) dx,
+\]
+其中使用到了积分中值定理，于是该方法的误差为
+\[
+    \int_a^b f(x)dx - \frac{f(a)+f(b)}{2}(b-a) = -\frac{1}{12}f''(\xi)(b-a)^3.
+\]
+
+对于$ n=2 $的情形，Lagrange基函数变为
+\[
+    \ell_0(x) = \frac{(x-x_1)(x-x_2)}{(x_0-x_1)(x_0-x_2)},\quad \ell_1(x) = \frac{(x-x_0)(x-x_2)}{(x_1-x_0)(x_1-x_2)},\quad \ell_2(x) = \frac{(x-x_0)(x-x_1)}{(x_2-x_0)(x_2-x_1)},
+\]
+计算$ A_0,A_1,A_2 $可得
+\[
+    A_0 = \int_a^b \ell_0(x)dx = \frac{b-a}{6},\quad A_1 = \int_a^b \ell_1(x)dx = \frac{2(b-a)}{3},\quad A_2 = \int_a^b \ell_2(x)dx = \frac{b-a}{6},  
+\]
+由此可知$ n=2 $的Newton-Cotes公式为
+\begin{equation}
+    \int_a^b f(x)dx \approx A_0 f(x_0) + A_1 f(x_1) + A_2 f(x_2) = \frac{b-a}{6}\left[ f(a) + 4f\left(\frac{a+b}{2}\right) + f(b) \right],
+\end{equation}
+此即Simpson法则。与之前类似地借助积分中值定理可知该方法的误差为
+\[
+    \int_a^b f(x)dx - \frac{b-a}{6}\left[ f(a) + 4f\left(\frac{a+b}{2}\right) + f(b) \right] = -\frac{1}{90}f^{(4)}(\xi)(\frac{b-a}{2})^5.
+\]
+
+通常为了提高精度，我们可以将区间$ [a,b] $等分为$ n $个子区间，然后在每个子区间上使用Newton-Cotes公式，这种方法称为复合Newton-Cotes公式。当使用等距划分$ a = x_0< x_1<\cdots<x_{n-1} <x_n = b $时，复合梯形法则为
+\begin{equation}
+    \int_a^b f(x)dx = \sum_{i=1}^n \int_{x_{i-1}}^{x_i} f(x)dx \approx \frac{h}{2}\left[ f(x_0) + 2\sum_{i=1}^{n-1}f(x_i) + f(x_n) \right],
+\end{equation}
+其中$ h = (b-a)/n $，数值误差为
+\[
+    -\frac{1}{12} (b-a)h^2 f''(\xi).  
+\]
+复合Simpson法则为
+\begin{equation}
+    \int_a^b f(x)dx = \sum_{i=1}^n \int_{x_{i-1}}^{x_i} f(x)dx \approx \frac{h}{3}\left[ f(x_0) + 4\sum_{i=1}^{n / 2}f(x_{2i -1}) + 2\sum_{i=2}^{n / 2}f(x_{2i-2}) + f(x_n) \right],
+\end{equation}
+数值误差为
+\[
+    -\frac{1}{180} (b-a)h^4 f^{(4)}(\xi).
+\]
+
+一般的Newton-Cotes公式可以借助待定系数法来构造，由于插值节点已经确定，我们只需要计算$ A_i $的值。通常我们需要选取$ A_i $以使得相应的Newton-Cotes公式具有尽可能高的精度，一般$ n+1 $个节点的Newton-Cotes公式最高可以达到$ n $阶代数精度，即对于任意阶数不超过$ n $的多项式$ p(x) $，有
+\[
+    \int_a^b p(x)dx = \sum_{i=0}^n A_i p(x_i),
+\]
+即数值积分是准确的。要求$ n+1 $个节点的Newton-Cotes公式具有$ n $阶代数精度可以确定$ A_i $的值。要令$ n+1 $个节点的Newton-Cotes公式具有$ n $阶代数精度，只需
+\begin{equation}
+    \int_a^b x^k dx = \sum_{i=0}^n A_i x_i^k,\quad k=0,1,\cdots ,n,
+\end{equation}
+写成矩阵形式即
+\[
+    \begin{pmatrix}
+        1 & 1 & \cdots & 1\\
+        x_0 & x_1 & \cdots & x_n\\
+        \vdots & \vdots & \ddots & \vdots\\
+        x_0^n & x_1^n & \cdots & x_n^n
+    \end{pmatrix}
+    \begin{pmatrix}
+        A_0\\
+        A_1\\
+        \vdots\\
+        A_n
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        b-a\\
+        \frac{b^2-a^2}{2}\\
+        \vdots\\
+        \frac{b^{n+1}-a^{n+1}}{n+1}
+    \end{pmatrix},
+\]
+注意到系数矩阵是Vandermonde矩阵且使用的是等距节点，因此该线性方程组是非奇异的，方程有界，解该线性方程组即可得到$ A_i $的值。然而该方法的缺点是当$ n $较大时，Vandermonde矩阵的条件数会变得很大，因此数值稳定性会变得很差。另一种方法是不再考虑$ x^k $，而是换用$ (x-x_0)\cdots (x-x_k) $，这种情况下有
+\begin{equation}
+    \int_a^b \prod_{j=0}^k (x-x_j)dx = \sum_{i=k+1}^n A_i \prod_{j=0}^k (x_i-x_j),
+\end{equation}
+于是矩阵形式变为
+\[
+    \begin{pmatrix} 
+         1  & 1 & 1 & \cdots & 1\\
+            & (x_1-x_0) & (x_2-x_0) & \cdots & (x_n-x_0)\\
+            &  & (x_2-x_0)(x_2-x_1) & \cdots & (x_n-x_0)(x_n-x_1)\\
+            &  &  & \ddots & \vdots\\
+            &  &  &  & \prod_{j=0}^n (x_n-x_j)
+    \end{pmatrix} 
+    \begin{pmatrix}
+        A_0\\
+        A_1\\
+        \vdots\\
+        A_n
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        b-a\\
+        \int_a^b (x-x_0)dx\\
+        \vdots\\
+        \int_a^b \prod_{j=0}^n (x-x_j)dx
+    \end{pmatrix},
+\]
+这样系数矩阵变为上三角矩阵，因此可以使用回代法求解。
+
+更一般地，我们有广义Newton-Cotes公式，这类方法使用等距节点插值计算加权积分
+\begin{equation}
+    \int_a^b f(x)w(x)dx \approx \sum_{i=0}^n A_i f(x_i),
+\end{equation}
+其中$ w(x)>0 $是权函数，$ A_i $是待定系数。
+
+\subsection{Gauss积分公式}
+通过仔细选取插值节点，我们可以将插值型积分的精度提高到$ 2n+1 $阶，相应的积分方法称为Gauss积分。考虑一般的广义插值问题：
+\begin{equation}
+    \int_a^b f(x)w(x)dx = \sum_{i=0}^n A_i f(x_i),
+\end{equation}
+Gauss积分使用插值节点$ x_0,\cdots x_n $是关于$ w $的$ n+1 $阶广义正交多项式的零点。广义正交多项式的定义如下。
+\begin{definition}
+    如果$ n+1 $阶多项式$ Q $满足
+    \begin{equation}
+        \int_a^b P(x)Q(x)w(x)dx = 0,\quad \forall P\in \mathcal{P}_n,
+    \end{equation}
+    则称$ Q $是关于$ w $的$ n+1 $阶广义正交多项式。
+\end{definition}
+注意到对任意$ f\in \mathcal{P}_{2n+1} $都可以使用带余除法写为
+\[
+    f(x) = Q(x)g(x) + r(x),\quad \deg r < \deg Q = n+1,
+\]
+进而$ f(x_i) = r(x_i) $。又因为$ f $至多$ 2n+1 $阶，所以$ \deg g \leqslant n $，因此使用$ Q $的$ w$正交性有
+\begin{equation}
+    \int_a^b f(x)w(x)dx = \int_a^b Q(x)g(x)w(x)dx + \int_a^b r(x)w(x)dx = \sum_{i=0}^n A_i r(x_i) = \sum_{i=0}^n A_i f(x_i),
+\end{equation}
+因此该积分公式具有$ 2n+1 $阶代数精度。
+
+在使用Gauss积分时首先需要确定相应的广义正交多项式，通常可以使用Gram-Schmidt正交化方法来构造，其中使用关于$ w $的广义内积：
+\begin{equation}
+    \langle f,g \rangle = \int_a^b f(x)g(x)w(x)dx.
+\end{equation}
+可以验证广义正交多项式的所有根都是$ (a,b) $内实的单根。
+
+最后我们对Gauss积分的误差进行估计。我们先给出Gauss积分的一些性质。
+\begin{lemma}
+    Gauss积分公式中的系数$ A_i $都是正的，且满足
+    \begin{equation}
+        \sum_{i=0}^n A_i = \int_a^b w(x)dx.
+    \end{equation}
+\end{lemma}
+\begin{proof}
+    先说明$ A_i>0 $。令$ Q $是关于$ w $的$ n+1 $阶广义正交多项式，设它的根为$ x_0,\cdots ,x_n $，令$ P(x) = Q(x) / (x-x_i) $，其中$ x_i $是$ Q $的某一根，因此$ P $是$ n $阶多项式，因为Gauss积分具有$ 2n+1 $阶代数精度，所以对$ P^2 $使用Gauss积分有
+    \[
+        0 = \int_a^b P^2(x)w(x)dx = \sum_{j=0}^n A_j P^2(x_j) = A_i P^2(x_i),
+    \]
+    所以$ A_i>0 $。另外，对$ Q=1 $使用Gauss积分有
+    \[
+        \int_a^b w(x)dx = \sum_{i=0}^n A_i,
+    \]
+    证毕。
+\end{proof}
+
+根据Weierstrass定理，有界闭区间上的连续函数可以被多项式逼近，因此对于任意$ f\in C[a,b] $，给定任意$ \varepsilon>0 $，都存在$ P\in \mathcal{P} $使得
+\[
+    |f(x) - P(x)| < \varepsilon,\quad \forall x\in [a,b].
+\]
+使用这一事实我们可以证明使用Gauss积分计算$ f $的广义积分的误差随着插值节点个数$ n $的增大而收敛到零。
+
+\begin{theorem}{\normalfont\bf{Gauss积分的收敛性}}
+    如果$ f\in C[a,b] $，则对于任意$ \varepsilon>0 $，存在$ N $使得任意$ n>N $都有
+    \begin{equation}
+        \left\vert \int_a^b f(x)w(x)dx - \sum_{i=0}^n A_{ni} f(x_{ni}) \right\vert < \varepsilon,
+    \end{equation}
+    因此Gauss积分的误差随着插值节点个数$ n $的增大而收敛到零，其中下标$ ni $表示使用$ A_{ni} $和节点$ x_{ni} $与节点个数$ n $有关。
+\end{theorem}
+\begin{proof}
+    选取$ \epsilon > 0 $使得
+    \[
+        2 \epsilon \int_a^b w(x)dx < \varepsilon,
+    \]
+    根据Weierstrass定理，存在$ P\in \mathcal{P} $使得
+    \[
+        |f(x) - P(x)| < \epsilon,\quad \forall x\in [a,b].
+    \]
+    使用三角不等式可知
+    \[
+        \begin{aligned}
+            \left\vert \int_a^b f(x)w(x)dx - \sum_{i=0}^n A_{ni} f(x_{ni}) \right\vert &\leqslant \left\vert \int_a^b f(x)w(x)dx - \int_a^b P(x)w(x)dx \right\vert + \left\vert \int_a^b P(x)w(x)dx - \sum_{i=0}^n A_{ni} f(x_{ni}) \right\vert\\
+            &\leqslant \int_a^b |f(x) - P(x)|w(x)dx + \left\vert \sum_{i=0}^n A_{ni} P(x_{ni}) - \sum_{i=0}^n A_{ni} f(x_{ni}) \right\vert\\
+            &\leqslant \epsilon \int_a^b w(x)dx + \sum_{i=0}^n A_{ni} |P(x_{ni}) - f(x_{ni})|\\
+            &\leqslant \epsilon \int_a^b w(x)dx + \sum_{i=0}^n A_{ni} \epsilon\\
+            &\leqslant 2 \epsilon \int_a^b w(x)dx < \varepsilon,
+        \end{aligned}
+    \]
+    其中我们令$ N $为任意大于$ \deg P $的整数，证毕。
+\end{proof}
+
+更进一步地，我们可以给出Gauss积分的具体误差公式。
+\begin{theorem}{\normalfont\bf{$ n+1 $节点Gauss积分的误差公式}}
+    如果$ f\in C^{2n+2}[a,b] $，则存在$ \xi\in (a,b) $使得
+    \begin{equation}
+        \int_a^b f(x)w(x)dx - \sum_{i=0}^n A_i f(x_i) = \frac{f^{(2n+2)}(\xi)}{(2n+2)!} \int_a^b \prod_{i=0}^n (x-x_i)dx.
+    \end{equation}
+\end{theorem}
+\begin{proof}
+    令$ P $为$ f $在Gauss插值节点处的二重Hermite插值多项式，即
+    \[
+        P(x_i) = f(x_i),\quad P'(x_i) = f'(x_i),\quad i=0,1,\cdots ,n,
+    \]
+    于是$ \deg P = 2n+1 $，插值误差为
+    \[
+        f(x) - P(x) = \frac{f^{(2n+2)}(\xi_x)}{(2n+2)!} \prod_{i=0}^n (x-x_i)^2,
+    \]
+    将上式关于$ w $积分并使用Gauss积分即可得到
+    \[
+        \int_a^b f(x)w(x)dx - \sum_{i=0}^n A_i f(x_i) = \frac{1}{(2n+2)!} \int_a^b f^{(2n+2)}(\xi_x)\prod_{i=0}^n (x-x_i)^2dx,
+    \]
+    使用积分中值定理可知上式右侧等于
+    \[
+        \frac{f^{(2n+2)}(\xi)}{(2n+2)!} \int_a^b \prod_{i=0}^n (x-x_i)dx,
+    \]
+    因此
+    \[
+        \int_a^b f(x)w(x)dx - \sum_{i=0}^n A_i f(x_i) = \frac{f^{(2n+2)}(\xi)}{(2n+2)!} \int_a^b \prod_{i=0}^n (x-x_i)dx,
+    \]
+    证毕。
+\end{proof}
+
+\subsection{Romberg积分}
+当使用复合梯形法则时，类似于数值微分中的Richardson外推法，我们可以通过递推的方式提高数值积分的精度，在这个过程中，我们希望可以充分利用以往的计算结果以减少计算量（用内存换速度），相应的方法称为Romberg积分。
+
+令计算步长为$ h = (b-a) / n $，则记复合梯形法则为
+\begin{equation}
+    T(n) = \frac{h}{2}\left[ f(x_0) + 2\sum_{i=1}^{n-1}f(x_i) + f(x_n) \right] = \frac{b-a}{2n} \left[ f(a) + 2\sum_{i=1}^{n-1}f(a+\frac{b-a}{n}i) + f(b) \right],
+\end{equation}
+注意到当步长减半时，原本的节点仍然在被使用，因此无需重复计算这一部分极点处的值，更准确地说，我们有
+\begin{equation}
+    \begin{aligned}
+        T(2n) 
+        &= \frac{b-a}{4n} \left[ f(a) + 2\sum_{i=1}^{2n-1}f(a+\frac{b-a}{2n}i) + f(b) \right]\\
+        &= \frac{1}{2}T(n) + \frac{b-a}{2n} \sum_{i=1}^{n-1}f(a+\frac{b-a}{2n}(2i-1)),
+    \end{aligned}
+\end{equation}
+重复使用上式可得
+\begin{equation}
+    T(2^n) = \frac{1}{2}T(2^{n-1}) + \frac{b-a}{2^n} \sum_{i=1}^{2^n-1}f(a+\frac{b-a}{2^n}(2i-1)),
+\end{equation}
+于是使用这一递推关系可以较高效地计算出$ T(2^n) $，这一方法称为Romberg积分。
+
+通常Romberg积分可以借助Richardson外推法提高精度，这一过程往往使用表格来计算。令表格的第一列为$ R(n,0)=T(2^n) $。注意到梯形法则具有二阶精度且误差中不含有奇数次项，因此Richardson外推过程中的递推关系为
+\begin{equation}
+    R(n,k) = \frac{4^k}{4^k-1}R(n,k-1) - \frac{1}{4^k-1}R(n-1,k-1),
+\end{equation}
+其中$ n=2^k,\cdots ,M $，$ k=1,2,\cdots ,n $。计算表格为
+\begin{center}
+    \begin{tabular}{cccccc}
+        \toprule
+        $ R(0,0) $ & & & & & \\
+        $ R(1,0) $ & $ R(1,1) $ & & & & \\
+        $ R(2,0) $ & $ R(2,1) $ & $ R(2,2) $ & & & \\
+        $ \vdots $ & $ \vdots $ & $ \vdots $ & $ \ddots $ & & \\
+        $ R(M,0) $ & $ R(M,1) $ & $ R(M,2) $ & $ \cdots $ & $ R(M,M) $ & \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+\end{document}

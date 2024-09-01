@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  10 AUG 2024 02:52
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  27 AUG 2024 16:55
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -1189,17 +1189,17 @@ LaTeX Font Info:    Font shape `TU/SimSun(0)/m/sl' in size <10> not available
 (Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 64.
  [1
 
-] [2] (./PDES.aux)
+] [2] [3] [4] [5] [6] [7] [8] (./PDES.aux)
 Package rerunfilecheck Info: File `PDES.out' has not changed.
-(rerunfilecheck)             Checksum: CF9C9DC145624BB3F21BCC05BC304DA8;131.
+(rerunfilecheck)             Checksum: 741EF8394130004AFE76D149B53993DB;671.
  ) 
 Here is how much of TeX's memory you used:
- 40780 strings out of 476683
- 887780 string characters out of 5804929
+ 40865 strings out of 476683
+ 891560 string characters out of 5804929
  1878012 words of memory out of 5000000
- 60275 multiletter control sequences out of 15000+600000
- 522945 words of font info for 97 fonts, out of 8000000 for 9000
+ 60351 multiletter control sequences out of 15000+600000
+ 525607 words of font info for 111 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 119i,7n,121p,493b,601s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 119i,10n,121p,493b,601s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on PDES.pdf (2 pages).
+Output written on PDES.pdf (8 pages).

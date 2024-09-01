@@ -615,12 +615,12 @@ Gerschgorin圆盘定理是常用的用来估计矩阵特征值的一种工具。
 \]
 则通过改变求和顺序可以得到离散版本的分布积分公式，即分布求和公式：
 \begin{equation}
-    \left<\delta_{+}u,v\right> = (u_Mv_M-u_1v_0) - \left<a, \delta_-v\right].
+    \left<\delta_{+}u,v\right> = (u_Mv_M-u_1v_0)\Delta x - \left<u, \delta_-v\right].
 \end{equation}
 进而可得离散Green公式:
 \begin{eqnarray}
-    \left<\delta_+(a \delta_- u), v\right> &=& (a_M \delta_-u_M v_M - a_1\delta_-u_1v_0) - \left<a\delta_-u, \delta_-v\right].\\
-    \left<\delta_+(a \delta_- u), v\right> - \left<\delta_+(a \delta_- v), u\right> &=& a_M(v \delta_-u_M-u\delta_-v_M) - a_1(v\delta_+u_0-u\delta_+v_0).
+    \left<\delta_+(a \delta_- u), v\right> &=& (a_M \delta_-u_M v_M - a_1\delta_-u_1v_0)\Delta x - \left<a\delta_-u, \delta_-v\right].\\
+    \left<\delta_+(a \delta_- u), v\right> - \left<\delta_+(a \delta_- v), u\right> &=& a_M(v \delta_-u_M-u\delta_-v_M)\Delta x - a_1(v\delta_+u_0-u\delta_+v_0).
 \end{eqnarray}
 另外，在使用能量法时我们往往需要使用到以下几个不等式：
 \begin{enumerate}

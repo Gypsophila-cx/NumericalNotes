@@ -66,11 +66,11 @@
     \end{enumerate}
 \end{definition}
 
-根据Parseval定理，$ \| u(x,t) \|_2 = \| \hat{u}(\omega,t) \|_2 $，因此可以使用Fourier变换来研究问题的适定性，将简谐波解
+根据Parseval定理，$ \| u(x,t) \|_2 = \| \hat{u}(\omega,t) \|_2 $，因此可以使用Fourier变换来研究问题的适定性，将单波解
 \begin{equation}
     u(x,t) = \hat{u}(\omega,t)e^{i \omega x}
 \end{equation}
-代入给定的方程\eqref{eq:lpde}可以得到$ \hat{u}(\omega,t) $与$ \hat{u}(\omega,0)=\hat{f} $之间的关系，借助这两者之间增长的关系可以判断问题的适定性。
+（这一单波解对应单波初始条件$ f(x) = e^{i \omega x}\hat{f}(\omega) $，其中$ \hat{f}(\omega) = 1 / (2 \pi) \int_{-\pi}^\pi f(x)e^{-i \omega x}dx $）代入给定的方程\eqref{eq:lpde}可以得到$ \hat{u}(\omega,t) $与$ \hat{u}(\omega,0)=\hat{f} $之间的关系，借助这两者之间增长的关系可以判断问题的适定性。
 
 \begin{example}
     考虑具有周期性边界的二维扩散方程$ u_t = \kappa\Delta u $的初值问题，令$ u(x,t) = \hat{u}(\omega,t)e^{i \omega\cdot x} $，$ \omega,x $都是二维向量，代入方程可以得到
@@ -89,5 +89,406 @@
 \end{example}
 
 在上面的例子中，尽管当问题具有$ 2\pi $周期性边界时可以只考虑$ \omega\in [-\pi,\pi] $的简谐波，然而对于数值计算而言，舍入误差的存在使得计算时几乎总是会出现高频分量，因此有必要考虑所有的$ \omega\in \mathbb{R} $，要求任意可能的$ \omega $下的$ \beta $都有上界。
+
+\subsection{一维线性常系数标量方程}
+考虑如下一维线性常系数标量方程
+\begin{equation}\label{eq:1d_parabolic}
+    u_t = au_{xx} + bu_x + cu
+\end{equation}
+的$ (-\pi,\pi) $周期性边界条件下的初值问题，初值条件为$ u(x,0)=f(x) $。根据上一节的定义我们有如下适定性判定定理。
+\begin{theorem}
+    周期初边值问题\eqref{eq:1d_parabolic}是适定的，当且仅当存在$ \alpha\in \mathbb{R} $使得
+    \begin{equation}
+        {\rm Re}\ \kappa(\omega) \leqslant \alpha,\quad\forall \omega\in \mathbb{R},
+    \end{equation}
+    其中$ \kappa(\omega) = -a\omega^2 + ib\omega + c $。
+\end{theorem}
+\begin{proof}
+    考虑单波解$ u(x,t) = \exp(i \omega x)\hat{u}(\omega,t) $，带入方程\eqref{eq:1d_parabolic}可以得到
+    \[
+        \hat{u}_t(\omega,t) = (-a\omega^2 + ib\omega + c)\hat{u}(\omega,t) = \kappa \hat{u}(\omega,t),
+    \]
+    相应的初值条件变为$ \hat{u}(\omega,0) = \hat{f}(\omega) $，该ODE问题的解为
+    \[
+        \hat{u}(\omega,t) = \hat{f}(\omega)e^{\kappa t},
+    \]
+    根据Parseval定理，$ \| u(x,t) \|_2 = \| \hat{u}(\omega,t) \|_2 $，因此
+    \[
+        \| u(x,t) \|_2 = e^{{\rm Re}\ \kappa t} \| \hat{f}(\omega) \|_2 = e^{{\rm Re}\ \kappa t} \| u(x,0) \|_2,  
+    \]
+    根据适定性的定义，需要$ {\rm Re}\ \kappa(\omega) $关于$ \omega\in \mathbb{R} $有上界，即$ {\rm Re}\ \kappa(\omega) \leqslant \alpha $。
+\end{proof}
+
+根据如上定理，方程\eqref{eq:1d_parabolic}的适定性依赖于$ \kappa(\omega) $，因为$ a,b,c\in \mathbb{C} $而$ \omega\in \mathbb{R} $，所以
+\[
+    {\rm Re}\ \kappa(\omega) = -a_r\omega^2 - b_i \omega + c,
+\]
+于是我们有如下结论：
+\begin{enumerate}
+    \item 当$ a_r>0 $时，$ \kappa(\omega) $关于$ \omega $有上界，即
+    \[
+        \kappa = -a_r\omega^2 - b_i \omega + c \leqslant \frac{b_i}{4a_r} +c,\quad \forall \omega\in \mathbb{R}.
+    \]
+    \item 当$ a_r=0 $时，$ \kappa(\omega) $关于$ \omega $有上界当且仅当$ b_i =  0 $，此时问题适定。
+    \item 当$ a_r<0 $时，$ \kappa(\omega) $关于$ \omega $有不存在上界，因此问题总是病态的。
+\end{enumerate}
+因此总的来说，方程\eqref{eq:1d_parabolic}的适定性主要取决于最高阶项的系数$ a $的实部符号，这一事实对于更高阶的方程也是成立的。
+
+\subsection{一维线性常系数方程组}
+考虑一维线性常系数方程组
+\begin{equation}\label{eq:1d_hyperbolic}
+    u_t = Au_x,
+\end{equation}
+其中$ A $是$ m $阶方程，$ u = (u_1,\cdots,u_m) $是$ m $维向量值函数，相应的初值问题为$ u(x,0) = f(x) $。关于这一问题有如下适定性判定定理。
+\begin{theorem}
+    周期性初边值问题\eqref{eq:1d_hyperbolic}是适定的，当且仅当存在一阶系数矩阵$ A $的各特征值都为实数，且具有$ m $个线性无关的特征向量。
+\end{theorem}
+\begin{proof}
+    首先说明必要性。
+    设$ \phi $是$ A $的关于特征值$ \lambda $的一个特征向量，即$ A\phi = \lambda \phi $，则直接验证可知方程\eqref{eq:1d_hyperbolic}在初值$ u(x,0) = e^{i \omega x}\phi $下的一个解为
+    \begin{equation}
+        u(x,t) = e^{i \omega (x + \lambda t)} \phi = e^{i \lambda \omega t}u(x,0),
+    \end{equation}
+    因此
+    \[
+        \| u(x,t) \|_2 = e^{-({\rm Im}\ \lambda) \omega t} \| u(x,0) \|_2,
+    \]
+    为了保证适定性，需要$ {\rm Im}\ \lambda \cdot \omega $关于$ \omega \in \mathbb{R} $有上界，所以$ {\rm Im}\ \lambda = 0 $，因此$ \lambda $只能是实数。
+    为了说明$ A $必须有$ m $个线性无关的特征向量，考虑$ A $的Jordan标准型，即
+    \[
+        S^{-1}AS = 
+        \begin{pmatrix} 
+            \lambda_1 I + J_1 & & & \\
+            & \lambda_2 I + J_2 & & \\ 
+            & & \ddots & \\
+            & & & \lambda_k I + J_k
+        \end{pmatrix}= J ,
+    \]
+    其中$ \lambda_i $是$ A $的不同特征值，$ J_i $是对应的Jordan块。令$ v = S^{-1}u $，则原方程
+    \[
+        v_t = S^{-1}u_t = S^{-1}Au_x = S^{-1}AS S^{-1}u_x = Jv_x,
+    \]
+    考虑单波解$ v(x,t) = e^{i \omega x}\hat{v}(\omega,0) $，则
+    \[
+        \hat{v}_t(\omega,t) = i \omega J\hat{v}(\omega,t), \quad \hat{v}(\omega,0) = S^{-1}\hat{u}(\omega,0),
+    \]
+    所以$ \hat{v}(\omega,t) = \exp(i \omega J t)\hat{v}(\omega,0) $，其中
+    \[
+        \exp(i \omega J t) = \sum_{n=0}^{\infty} \frac{(i \omega t)^n}{n!} J^n,
+    \]
+    因为$ J $是分块对角阵，因此$ J^n $也是分块对角阵，只需考虑单独的一个Jordan块，于是问题转化为
+    \[
+        \hat{w} = \exp(i \omega (\lambda_j I+J_j) t)\hat{w}(0),
+    \]
+    所以
+    \[
+        \| w \|_2 \leqslant \| \exp(i \omega (\lambda_j I+J_j) t) \|_2 \| w(0) \|_2,
+    \]
+    为此我们考虑$ \exp(i \omega (\lambda_j I+J_j) t) $的实部矩阵的大小，注意到$ \lambda_j I $与$ J_i $可交换，因此
+    \[
+        \exp(i \omega (\lambda_j I+J_j) t) = \exp(i \omega \lambda_j t) \exp(i \omega J_j t),
+    \]
+    因为$ \lambda_j $为实数，因此只需考虑$ \exp(i \omega J_j t) $，注意到$ J_j^{m_j} = 0 $，其中$ m_j $是该Jordan块的大小，展开可得
+    \[
+        \exp(i \omega J_j t) = \sum_{n=0}^{\infty} \frac{(i \omega t)^n}{n!} J_j^n = \sum_{n=0}^{m_j-1} \frac{(i \omega t)^n}{n!} J_j^n
+    \]
+    当$ m_j\ne 1 $时，上式关于$ \omega \in \mathbb{R} $无法被控制，因此为了保证适定性，需要$ m_j = 1 $，即$ A $的只有一阶Jordan块，可逆$ S $是$ A $的特征向量矩阵，所以$ A $必须有$ m $个线性无关的特征向量。
+
+    现在说明充分性。当$ A $有$ m $个线性无关的特征向量时，可以将$ A $进行相似对角化$ A = S D S^{-1} $，和之前一样令$ v = S^{-1}u $可以将原方程解耦成$ m $个标量方程：
+    \[
+        (v_i)_t = \lambda_i(v_i)_x,\quad i=1,\cdots,m,
+    \]
+    其中$ \lambda_i\in \mathbb{R} $是$ A $的特征值，$ v_i $是$ v $的第$ i $个分量函数。根据上一小节对标量方程的适定性判定，每个标量方程都是适定的，因此转换后的$ v_t = D v_x $是适定的，且
+    \[
+        \| v(x,t) \|_2 = \| v(x,0) \|_2,
+    \]
+    现在我们需要将$ v $转换回$ u $，使用范数的相容性可得
+    \[
+        \| u(x,t) \|_2 = \| Sv(x,t) \|_2 \leqslant \| S \|_2 \| v(x,0) \|_2 = \| S \|_2 \| S^{-1}u(x,0) \|_2 \leqslant \| S \|_2 \| S^{-1} \|_2 \| u(x,0) \|_2,
+    \]
+    所以原问题是适定的。
+\end{proof}
+
+下面我们考虑双曲方程，首先给出一些定义：
+\begin{definition}
+    考虑形如$ u_t = Au_x $的方程，则
+    \begin{enumerate}
+        \item 如果$ A $的特征值都是实数，则称该方程是（弱）双曲的（weakly hyperbolic）；
+        \item 如果$ A = A^* $是Hermite矩阵，则称该方程是对称双曲的（symmetric hyperbolic）；
+        \item 如果$ A $的特征值都是实数且具有$ m $个线性无关的特征向量，则称该方程是强双曲的（strongly hyperbolic）；
+        \item 如果$ A $具有$ m $个互不相同的实特征值，则称该方程是严格双曲的（strictly hyperbolic）。
+    \end{enumerate}
+\end{definition}
+显然对于对称双曲、强双曲和严格双曲方程，系数矩阵$ A $都可以进行相似对角化。
+
+在讨论双曲方程的适定性之前，我们先给出一个引理：
+\begin{lemma}
+    如果$ y\in C^1 $满足
+    \begin{equation}
+        \frac{dy}{dt} \leqslant \alpha y,\quad \forall t\geqslant 0,
+    \end{equation}
+    则
+    \begin{equation}
+        y(t) \leqslant y(0)e^{\alpha t},\quad \forall t\geqslant 0.
+    \end{equation}
+\end{lemma}
+\noindent 证明只需考虑$ v = e^{-\alpha t}y $，它满足$ \frac{dv}{dt} \leqslant 0 $，因此$ v(t) \leqslant v(0) $，于是$ y(t) \leqslant y(0)e^{\alpha t} $。
+
+现在我们考虑更一般的带有零阶项的强双曲方程
+\[
+    u_t = Au_x + Bu,  
+\]
+关于这一方程的适定性有如下定理：
+\begin{theorem}
+    考虑形如$ u_t = Au_x + Bu $的强双曲方程，其中$ A,B $是$ m $阶矩阵，$ A $是强双曲的$ m $阶方阵，$ B $是任意常数矩阵，则该方程的初值问题是适定的。
+\end{theorem}
+\begin{proof}
+    因为$ A $是强双曲的，因此取$ S $为$ A $的线性无关的特征向量组成的矩阵，$ S^{-1}AS = D $是对角矩阵，$ D $的对角元是$ A $的特征值，于是$ v = S^{-1}u $满足
+    \[
+        v_t = Dv_x + S^{-1}BS v,
+    \]
+    记$ S^{-1}BS = C $，相应的初值条件为$ v(x,0) = S^{-1}u(x,0) $。考虑单波解$ v(x,t) = e^{i \omega x}\hat{v}(\omega,t) $，则
+    \[
+        \hat{v}_t(\omega,t) = i \omega D\hat{v}(\omega,t) + C\hat{v}(\omega,t),
+    \]
+    于是
+    \[
+        \hat{v}(\omega,t) = \exp((i \omega D+C) t)\hat{v}(\omega,0).
+    \]
+    注意到
+    \[
+        \begin{aligned}
+            \dfrac{\partial }{\partial t} (\hat{v},\hat{v}) = (\hat{v}_t,\hat{v}) + (\hat{v},\hat{v}_t) 
+            &= (i \omega D\hat{v} + C\hat{v},\hat{v}) + (\hat{v},i \omega D\hat{v} + C\hat{v}) \\
+            &= (i \omega D \hat{v}, \hat{v}) + (\hat{v},i \omega D\hat{v}) + (C\hat{v},\hat{v}) + (\hat{v},C\hat{v}) \\
+        \end{aligned},
+    \]
+    因为$(\hat{v},i \omega D\hat{v}) = -i \omega (D^* \hat{v}, \hat{v}) = -(i \omega D \hat{v}, \hat{v}) $，所以上式即
+    \[
+        \dfrac{\partial }{\partial t} (\hat{v},\hat{v}) = (C\hat{v},\hat{v}) + (\hat{v},C\hat{v}) \leqslant 2\| C \|_2 (\hat{v},\hat{v}),
+    \]
+    进而使用上一个引理两侧关于$ t $积分可得
+    \[
+        \| \hat{v}(\omega,t) \|_2^2 =(\hat{v}(\omega,t),\hat{v}(\omega,t)) \leqslant (\hat{v}(\omega,0),\hat{v}(\omega,0))e^{2\| C \|_2 t} = \| \hat{v}(\omega,0) \|_2^2 e^{2\| C \|_2 t},
+    \]
+    因此
+    \[
+        \| \hat{v}(\omega,t) \|_2^2 = \| \exp((i \omega D+C) t)\hat{v}(\omega,0) \|_2^2 \leqslant \| \hat{v}(\omega,0) \|_2^2 e^{2\| C \|_2 t},
+    \]
+    这说明
+    \[
+        \| \exp((i \omega D+C) t) \|_2 \leqslant e^{\| C \|_2 t}.
+    \]
+    因为方程的通解形如
+    \[
+        v(x,t) = \sum_{\omega = -\infty}^{\infty} \hat{v}(\omega,t)e^{i \omega x},
+    \]
+    带入$ \hat{v} $可得
+    \[
+        v(x,t) = \sum_{\omega = -\infty}^{\infty} e^{i \omega x + (i \omega D+C) t}\hat{v}(\omega,0),
+    \]
+    使用Parseval定理并使用$ \| \exp((i \omega D+C) t) \|_2 \leqslant e^{\| C \|_2 t} $可得
+    \[
+        \| v(x,t) \|_2 \leqslant e^{\| C \|_2 t} \| v(x,0) \|_2.
+    \]
+    最后使用$ u = Sv $可得
+    \[
+        \| u(x,t) \|_2 \leqslant \| S \|_2 \| S^{-1} \|_2  e^{\| C \|_2 t} \| u(x,0) \|_2,
+    \]
+    因此原问题是适定的。
+\end{proof}
+
+\subsection{一维常系数抛物方程组}
+考虑二阶常系数方程组
+\begin{equation}\label{eq:parabolics}
+    u_t = Au_{xx} + Bu_x + Cu
+\end{equation}
+的周期性初值问题，初值条件为$ u(x,0) = f(x) $。
+
+\begin{definition}
+    如果形如\eqref{eq:parabolics}的方程组中的$ A $的所有特征值的实部都有正的下界，即
+    \begin{equation}
+        {\rm Re}\ \lambda \geqslant \delta,
+    \end{equation}
+    其中$ \lambda $是$ A $的特征值，$ \delta $是一个正常数，则称该方程组是抛物的。
+\end{definition}
+
+为了简单起见，如果$ A=A^* $是Hermite的，而且$ (Av,v)\geqslant 0 $对任意$ v $都成立，则称$ A\geqslant 0 $。如果$ A,B $都是Hermite矩阵且$ A-B\geqslant 0 $，则记为$ A\geqslant B $。如果\eqref{eq:parabolics}是抛物的，则对$ A $使用Schur分解\footnote{对矩阵阶数进行归纳可证明}可以将它酉上三角化，即
+\[
+    A = U^*TU,
+\]
+其中$ U $是酉矩阵，$ T $是上三角矩阵，$ T $的对角元是$ A $的特征值，即
+\[
+    T = 
+    \begin{pmatrix}
+        \lambda_1 & t_{12} & \cdots & t_{1m} \\
+         & \lambda_2 & \cdots & t_{2m} \\
+         & & \ddots & \vdots \\
+         & & & \lambda_m
+    \end{pmatrix}.
+\]
+为了控制非对角元的大小，令$ D = \operatorname{diag}\{1,d,\cdots ,d^{m-1}\} $是对角矩阵，考虑
+\begin{equation}
+    \hat{A} = D^{-1}U^*TUD = 
+    \begin{bmatrix} 
+        \lambda_1 & d t_{12} & \cdots & d^{m-1} t_{1m} \\
+         & \lambda_2 & \cdots & d^{m-2} t_{2m} \\
+         & & \ddots & \vdots \\
+         & & & \lambda_m 
+    \end{bmatrix} = 
+    \Lambda + G ,
+\end{equation}
+其中$ \Lambda $是对角矩阵，$ G $是严格上三角矩阵，当$ d $足够小时，$ \hat{G} $的各个元素都足够接近零，于是
+\begin{equation}
+    G+G^*+\delta I\geqslant 0,
+\end{equation}
+而因为方程是抛物的，所以
+\begin{equation}
+    \Lambda + \Lambda^* = 2{\rm Re}\ \Lambda \geqslant 2\delta I,
+\end{equation}
+因此
+\begin{equation}
+    \hat{A} + \hat{A}^* = \Lambda + \Lambda^* + G + G^* \geqslant 2\delta I + G + G^* \geqslant \delta I.
+\end{equation}
+使用这一事实可以得到如下适定性定理：
+\begin{theorem}
+    一维常系数抛物方程组\eqref{eq:parabolics}的周期性初值问题是适定的。
+\end{theorem}
+\begin{proof}
+    做变量代换，令$ u = UD v $，其中$ U,D $是之前分析中的矩阵，满足$ \hat{A} = D^{-1}U^*TUD $，于是方程相应地变为
+    \[
+        v_t = \hat{A}v_{xx} + \hat{B}v_x + \hat{C}v,\quad v(x,0) = D^{-1}U^*f(x),
+    \]
+    考虑单波解$ v(x,t) = e^{i \omega x}\hat{u}(\omega,t) $，带入方程可以得到
+    \[
+        \hat{v}_t = (-\omega^2 \hat{A} + i \omega \hat{B} + \hat{C}) \hat{u}, \quad \hat{v}(\omega,0) = D^{-1}U^*\hat{f}(\omega),
+    \]
+    记$ \hat{P}(i \omega) = - \omega^2 \hat{A} + i \omega \hat{B} + \hat{C} $，则
+    \[
+        \hat{v}(\omega,t) = e^{\hat{P}(i \omega)t}\hat{f}(\omega).
+    \]
+    根据之前的分析有
+    \[
+        \hat{A} + \hat{A}^* \geqslant \delta I,
+    \]
+    于是
+    \begin{equation}
+        \begin{aligned}
+            \hat{P}(i \omega) + \hat{P}^*(i \omega)  = - \omega^2 (\hat{A} + \hat{A}^*) + i \omega(\hat{B} + \hat{B}^*) + (\hat{C} + \hat{C}^*) 
+            &\leqslant  (-\delta \omega^2 + 2 \| B \|_2 \omega + 2 \|\hat{C}\|_2)I \\
+            &\leqslant \left( \frac{\|\hat{B}\|_2^2}{\delta} + 2\|\hat{C}\|_2 \right) I,
+        \end{aligned}
+    \end{equation}
+    其中用到了$ \hat{B} + \hat{B}^* \leqslant 2 \| \hat{B} \|_2 I $和$ \hat{C} + \hat{C}^* \leqslant 2 \| \hat{C} \|_2 I $。记上式右侧的上界为$ 2 \alpha I $，于是
+    \[
+        \hat{P}(i \omega) + \hat{P}^*(i \omega) \leqslant 2 \alpha I.
+    \]
+    现在与之前一样考虑
+    \[
+        \begin{aligned}
+            \dfrac{\partial }{\partial t} (\hat{v},\hat{v}) = (\hat{v}_t,\hat{v}) + (\hat{v},\hat{v}_t) 
+            &= (\hat{P}(i \omega)\hat{v},\hat{v}) + (\hat{v},\hat{P}(i \omega)\hat{v})\\
+            &= ((\hat{P}(i \omega)+P^*(i \omega))\hat{v}, \hat{v})\\
+            &\leqslant 2\alpha (\hat{v},\hat{v}),
+        \end{aligned}
+    \]
+    再次使用引理可知
+    \[
+        \| \hat{v}(\omega,t) \|_2^2 \leqslant e^{2\alpha t} \| \hat{v}(\omega,0) \|_2^2 ,  
+    \]
+    于是
+    \[
+        \| \hat{v}(\omega,t) \|_2 = \| e^{\hat{P}(i \omega)t} \hat{v}(\omega,0) \|_2 \leqslant e^{\alpha t} \| \hat{v}(\omega,0) \|_2,
+    \]
+    进而
+    \[
+        \| e^{\hat{P}(i \omega)t} \|_2 \leqslant e^{\alpha t}.
+    \]
+    当考虑一般的初值$ f $而非单波初值时，可以将$ f $展开为Fourier级数
+    \[
+        f(x) = \sum_{\omega = -\infty}^{\infty} \hat{f}(\omega)e^{i \omega x},
+    \]
+    于是方程的一个形式解为
+    \[
+        v(x,t) = \sum_{\omega = -\infty}^{\infty} e^{i \omega x + \hat{P}(i \omega)t}\hat{f}(\omega),
+    \]
+    根据Parseval定理可得
+    \[
+        \| v(x,t) \|_2^2 = \sum_{\omega = -\infty}^{\infty} \| e^{i \omega x + \hat{P}(i \omega)t} \hat{f}(\omega)\|_2^2 \leqslant \sum_{\omega = -\infty}^{\infty} e^{2\alpha t} \| \hat{f}(\omega) \|_2^2 = e^{2\alpha t} \| f \|_2^2,
+    \]
+    于是该形式解是连续依赖于初值，现在我们需要将$ v $转换回$ u $，使用范数的相容性可得
+    \[
+        \| u(x,t) \|_2 \leqslant \| U \|_2 \| D \|_2 e^{\alpha t} \| U^* \|_2 \| D^{-1} \|_2 \| u(x,0) \|_2 = \| D \|_2 \| D^{-1} \|_2 e^{\alpha t} \| f \|_2,
+    \]
+    因此$ u = D^{-1}U^* v $是连续依赖于初值。最后我们证明$ v $是唯一解，如果$ w $是满足相同初值条件$ v(x,0)=w(x,0) $的另一个解，将$ v-w $进行Fourier展开可得
+    \[
+        v(x,t) - w(x,t) = \sum_{\omega = -\infty}^{\infty} e^{i \omega x}(\hat{v}(\omega,t) - \hat{w}(\omega,t)),
+    \]
+    于是
+    \[
+        \dfrac{\partial }{\partial t} (e^{i \omega x}, v-w) = (e^{i \omega x}, v_t-w_t) = (e^{i \omega x}, \hat{A}(v_{xx}-w_{xx}) + \hat{B}(v_x-w_x) + \hat{C}(v-w)),
+    \]
+    使用分部积分可知
+    \[
+        (e^{i \omega x}, v_x-w_x) = i \omega (e^{i \omega x}, v-w),
+    \]
+    再次微分可知
+    \[
+        (e^{i \omega x}, v_{xx}-w_{xx}) = -\omega^2 (e^{i \omega x}, v-w),
+    \]
+    注意到$ (e^{i \omega x}, v-w) = 2\pi (\hat{v}-\hat{w}) $，所以
+    \[
+        \dfrac{\partial }{\partial t} (\hat{v}-\hat{w}) = \hat{P}(i \omega)(\hat{v}-\hat{w}),\quad \hat{v}(\omega,0) - \hat{w}(\omega,0) = 0,
+    \]
+    因为上述方程只有零解，所以$ v = w $，因此解是唯一的。综上所述，该问题是适定的。
+\end{proof}
+
+\subsection{一般常系数方程组}
+考虑一般的常系数方程组的初值问题
+\begin{equation}\label{eq:general}
+    u_t = P \left( \dfrac{\partial }{\partial t}  \right) u,\quad u(x,0) = f(x),
+\end{equation}
+其中$ P $是一个常系数多项式，$ \omega = (\omega_1, \cdots , \omega_d) $是实波数向量，$ x = (x_1,\cdots ,x_d)\in \mathbb{R}^d $是空间变量，这种情况下单波初值为
+\[
+    f(x) = e^{i \omega \cdot x} \hat{f}(\omega),
+\]
+相应地单波解为
+\begin{equation}
+    u(x,t) = e^{i \omega \cdot x} \hat{u}(\omega,t),
+\end{equation}
+与之前一样将该单波解带入方程可以得到
+\begin{equation}
+    \hat{u}_t(\omega,t) = P(i \omega) \hat{u}(\omega,t), \quad \hat{u}(\omega,0) = \hat{f}(\omega),
+\end{equation}
+其中的$ P(i \omega) $是$ m $阶矩阵，其中的元素是$ i \omega_j $的多项式。对于这一问题我们有如下结论
+\begin{theorem}
+    一般常系数方程组\eqref{eq:general}的周期性初值问题是适定的当且仅当存在常数$ K,\alpha $使得
+    \begin{equation}
+        \| e^{\hat{P}(i \omega)t} \|_2 \leqslant K e^{\alpha t},\quad \forall \omega\in \mathbb{R}^d.
+    \end{equation}
+\end{theorem}
+证明可以视作之前各特例的推广。在实际应用中我们更常使用如下的必要性条件：
+\begin{theorem}{\normalfont\bf{The Petrovskii condition}}
+    方程组\eqref{eq:general}的周期性初值问题适定的一个必要条件是$ \hat{P}(i \omega) $的任意特征值$ \lambda $的实部都关于$ \omega\in \mathbb{R}^d $有上界，即
+    \begin{equation}
+        {\rm Re}\ \lambda \leqslant \alpha,\quad \forall \omega\in \mathbb{R}^d.
+    \end{equation}
+\end{theorem}
+在如上定理的基础上我们有下面的充分性定理：
+\begin{theorem}
+    如果Petrovskii条件满足，且存在常数$ K $和线性变换$ S(\omega) $满足
+    \begin{equation}
+        \| S(\omega) \|_2 \| S^{-1}(\omega) \|_2 \leqslant K,\quad \forall \omega\in \mathbb{R}^d
+    \end{equation}
+    使得$ S^{-1}(\omega)\hat{P}(i \omega)S(\omega) $是对角矩阵，则方程组\eqref{eq:general}的周期性初值问题是适定的。
+\end{theorem}
+作为一个推论有
+\begin{corollary}
+    如果存在常数$ \alpha $使得
+    \begin{equation}
+        \hat{P}(i \omega) + \hat{P}^*(i \omega) \leqslant 2\alpha I,\quad \forall \omega\in \mathbb{R}^d,
+    \end{equation}
+    则方程组\eqref{eq:general}的周期性初值问题是适定的。
+\end{corollary}
 
 \end{document}

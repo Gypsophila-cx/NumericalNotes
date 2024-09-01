@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  10 AUG 2024 01:12
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.7)  27 AUG 2024 01:02
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -1186,20 +1186,25 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 26.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `TU/SimSun(0)/m/sl' in size <10> not available
-(Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 60.
+(Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 61.
  [1
 
-] [2] [3] [4] (./DispersionAndDissipation.aux)
+] [2] [3]
+Overfull \hbox (11.80577pt too wide) detected at line 192
+[][]
+ []
+
+[4] [5] [6] (./DispersionAndDissipation.aux)
 Package rerunfilecheck Info: File `DispersionAndDissipation.out' has not changed.
-(rerunfilecheck)             Checksum: F5CA744F6C081B4DD2D848AAFEC5EFC0;432.
+(rerunfilecheck)             Checksum: 409A4310565F1A3AFE30BC5C05BF9B8A;786.
  ) 
 Here is how much of TeX's memory you used:
- 40810 strings out of 476683
- 889634 string characters out of 5804929
- 1885012 words of memory out of 5000000
- 60301 multiletter control sequences out of 15000+600000
+ 40854 strings out of 476683
+ 892230 string characters out of 5804929
+ 1884012 words of memory out of 5000000
+ 60345 multiletter control sequences out of 15000+600000
  522977 words of font info for 101 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 119i,7n,121p,513b,430s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 119i,8n,121p,513b,423s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on DispersionAndDissipation.pdf (4 pages).
+Output written on DispersionAndDissipation.pdf (6 pages).
